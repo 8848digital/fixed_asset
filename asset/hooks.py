@@ -4,7 +4,7 @@ app_publisher = "8848 Digital"
 app_description = "Asset"
 app_email = "sibi@8848digital.com"
 app_license = "mit"
-required_apps = ["frappe","erpnext"]
+required_apps = ["frappe", "erpnext"]
 
 # Includes in <head>
 # ------------------
@@ -226,4 +226,3 @@ required_apps = ["frappe","erpnext"]
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-
