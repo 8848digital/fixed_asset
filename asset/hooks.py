@@ -4,7 +4,7 @@ app_publisher = "8848 Digital"
 app_description = "Asset"
 app_email = "sibi@8848digital.com"
 app_license = "mit"
-# required_apps = []
+required_apps = ["frappe","erpnext"]
 
 # Includes in <head>
 # ------------------
