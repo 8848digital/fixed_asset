@@ -133,23 +133,28 @@ required_apps = ["frappe", "erpnext"]
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"asset.tasks.all"
-# 	],
-# 	"daily": [
-# 		"asset.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"asset.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"asset.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"asset.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	# "all": [
+	# 	"asset.tasks.all"
+	# ],
+	"daily": [
+		"asset.asset.doctype.asset.asset.update_maintenance_status",
+		"asset.asset.doctype.asset.asset.make_post_gl_entry",
+        "asset.asset.doctype.asset_maintenance_log.asset_maintenance_log.update_asset_maintenance_log_status",
+	],
+	# "hourly": [
+	# 	"asset.tasks.hourly"
+	# ],
+	# "weekly": [
+	# 	"asset.tasks.weekly"
+	# ],
+    "daily_long": [
+		"asset.asset.doctype.asset.depreciation.post_depreciation_entries",
+	],
+	# "monthly": [
+	# 	"asset.tasks.monthly"
+	# ], 
+}
 
 # Testing
 # -------
@@ -226,3 +231,22 @@ required_apps = ["frappe", "erpnext"]
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
+
+period_closing_doctypes = [
+	"Asset",
+	"Asset Capitalization",
+	"Asset Repair",
+]
+
+accounting_dimension_doctypes = [
+	"Asset",
+	"Asset Value Adjustment",
+	"Asset Repair",
+	"Asset Capitalization",
+]
+
+global_search_doctypes = {
+	"Default": [
+		{"doctype": "Asset", "index": 28},
+	],
+}
