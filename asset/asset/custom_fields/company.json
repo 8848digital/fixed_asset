@@ -1,0 +1,11 @@
+{
+    "Company": [
+        {
+            "fieldname": "fixed_asset_defaults",
+            "fieldtype": "Section Break",
+            "insert_after": "exception_budget_approver_role",
+            "label": "Fixed Asset Defaults",
+            "module": "asset"
+        }
+    ]
+}

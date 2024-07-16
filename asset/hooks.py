@@ -68,12 +68,13 @@ required_apps = ["frappe", "erpnext"]
 # ------------
 
 # before_install = "asset.install.before_install"
-# after_install = "asset.install.after_install"
+after_install = "asset.install.after_install"
+after_migrate = "asset.setup.after_migrate"
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "asset.uninstall.before_uninstall"
+before_uninstall = "asset.uninstall.before_uninstall"
 # after_uninstall = "asset.uninstall.after_uninstall"
 
 # Integration Setup
