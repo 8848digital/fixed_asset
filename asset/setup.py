@@ -37,10 +37,12 @@ def create_property_setter():
 	path = os.path.join(os.path.dirname(__file__), "asset/property_setter")
 	for file in os.listdir(path):
 		with open(os.path.join(path, file), "r") as f:
-			args = json.load(f)
-			if isinstance(args.get("value"), list):
-				args["value"] = json.dumps(args["value"])
-			make_property_setter(args, is_system_generated=False)
+			property_setters = json.load(f)
+			for doctype, properties in property_setters.items():
+				for args in properties:
+					if not args.get("doctype"):
+						args["doctype"] = doctype
+					make_property_setter(**args)
 
 
 def delete_custom_fields():
