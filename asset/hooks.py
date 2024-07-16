@@ -28,7 +28,11 @@ required_apps = ["frappe", "erpnext"]
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {"Company": "asset/customizations/company/company.js"}
+doctype_js = {
+    "Company": "asset/customizations/company/company.js",
+    "Item": "asset/customizations/item/item.js"
+    
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -126,6 +130,10 @@ before_uninstall = "asset.uninstall.before_uninstall"
 doc_events = {
 	"Company": {
 		"on_update": "asset.asset.customizations.company.company.on_update",
+	},
+    "Item": {
+		"validate": "asset.asset.customizations.item.item.validate",
+        "onload": "asset.asset.customizations.item.item.onload"
 	}
 }
 
