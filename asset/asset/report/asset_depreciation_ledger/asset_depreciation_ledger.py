@@ -93,7 +93,9 @@ def get_data(filters):
 
 			else:
 				asset_data.accumulated_depreciation_amount += d.debit
-			asset_data.opening_accumulated_depreciation = asset_data.accumulated_depreciation_amount - d.debit
+			asset_data.opening_accumulated_depreciation = (
+				asset_data.accumulated_depreciation_amount - d.debit
+			)
 
 			row = frappe._dict(asset_data)
 			row.update(

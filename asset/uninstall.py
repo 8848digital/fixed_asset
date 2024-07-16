@@ -10,8 +10,7 @@ def before_uninstall():
 
 	except Exception as e:
 		click.secho(
-			"Removing Customizations for Frappe Asset failed due to an error."
-			" Please try again.",
+			"Removing Customizations for Frappe Asset failed due to an error." " Please try again.",
 			fg="bright_red",
 		)
 		raise e

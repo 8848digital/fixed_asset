@@ -274,7 +274,9 @@ def get_assets_for_grouped_by_category(filters):
 			where a.docstatus=1 and a.company=%(company)s and a.purchase_date <= %(to_date)s {0}
 			group by a.asset_category) as results
 		group by results.asset_category
-		""".format(condition),
+		""".format(
+			condition
+		),
 		{"to_date": filters.to_date, "from_date": filters.from_date, "company": filters.company},
 		as_dict=1,
 	)
@@ -334,7 +336,9 @@ def get_assets_for_grouped_by_asset(filters):
 			where a.docstatus=1 and a.company=%(company)s and a.purchase_date <= %(to_date)s {0}
 			group by a.name) as results
 		group by results.name
-		""".format(condition),
+		""".format(
+			condition
+		),
 		{"to_date": filters.to_date, "from_date": filters.from_date, "company": filters.company},
 		as_dict=1,
 	)

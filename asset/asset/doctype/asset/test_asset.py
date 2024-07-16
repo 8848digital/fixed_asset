@@ -4,6 +4,12 @@
 import unittest
 
 import frappe
+from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
+from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
+from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
+	make_purchase_invoice as make_invoice,
+)
+from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 from frappe.utils import (
 	add_days,
 	add_months,
@@ -16,8 +22,6 @@ from frappe.utils import (
 	nowdate,
 )
 
-from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
-from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 from asset.asset.doctype.asset.asset import (
 	make_sales_invoice,
 	split_asset,
@@ -35,10 +39,6 @@ from asset.asset.doctype.asset_depreciation_schedule.asset_depreciation_schedule
 	get_depr_schedule,
 	get_depreciation_amount,
 )
-from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
-	make_purchase_invoice as make_invoice,
-)
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
 
 class AssetSetup(unittest.TestCase):
@@ -109,7 +109,9 @@ class TestAsset(AssetSetup):
 		self.assertRaises(frappe.ValidationError, asset.save)
 
 	def test_purchase_asset(self):
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location"
+		)
 
 		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
 		asset = frappe.get_doc("Asset", asset_name)
@@ -510,7 +512,9 @@ class TestAsset(AssetSetup):
 		self.assertEqual(jv.accounts[3].reference_name, new_asset.name)
 
 	def test_expense_head(self):
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=2, rate=200000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro", qty=2, rate=200000.0, location="Test Location"
+		)
 		doc = make_invoice(pr.name)
 
 		self.assertEqual("Asset Received But Not Billed - _TC", doc.items[0].expense_account)
@@ -620,7 +624,9 @@ class TestAsset(AssetSetup):
 		self.assertFalse(gle)
 
 		# case 1 -- PR with cwip disabled, Asset with cwip enabled
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=200000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro", qty=1, rate=200000.0, location="Test Location"
+		)
 		frappe.db.set_value("Asset Category", "Computers", "enable_cwip_accounting", 1)
 		frappe.db.set_value("Asset Category Account", name, "capital_work_in_progress_account", cwip_acc)
 		asset = frappe.db.get_value("Asset", {"purchase_receipt": pr.name, "docstatus": 0}, "name")
@@ -632,7 +638,9 @@ class TestAsset(AssetSetup):
 		self.assertFalse(gle)
 
 		# case 2 -- PR with cwip enabled, Asset with cwip disabled
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=200000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro", qty=1, rate=200000.0, location="Test Location"
+		)
 		frappe.db.set_value("Asset Category", "Computers", "enable_cwip_accounting", 0)
 		asset = frappe.db.get_value("Asset", {"purchase_receipt": pr.name, "docstatus": 0}, "name")
 		asset_doc = frappe.get_doc("Asset", asset)
@@ -1246,7 +1254,8 @@ class TestDepreciationBasics(AssetSetup):
 
 		je = frappe.get_doc("Journal Entry", get_depr_schedule(asset.name, "Active")[0].journal_entry)
 		accounting_entries = [
-			{"account": entry.account, "debit": entry.debit, "credit": entry.credit} for entry in je.accounts
+			{"account": entry.account, "debit": entry.debit, "credit": entry.credit}
+			for entry in je.accounts
 		]
 
 		for entry in accounting_entries:
@@ -1281,7 +1290,8 @@ class TestDepreciationBasics(AssetSetup):
 
 		je = frappe.get_doc("Journal Entry", get_depr_schedule(asset.name, "Active")[0].journal_entry)
 		accounting_entries = [
-			{"account": entry.account, "debit": entry.debit, "credit": entry.credit} for entry in je.accounts
+			{"account": entry.account, "debit": entry.debit, "credit": entry.credit}
+			for entry in je.accounts
 		]
 
 		for entry in accounting_entries:
@@ -1362,15 +1372,21 @@ class TestDepreciationBasics(AssetSetup):
 		post_depreciation_entries(date="2020-04-01")
 		asset.load_from_db()
 
-		asset_depr_schedule_doc_1 = get_asset_depr_schedule_doc(asset.name, "Active", "Test Finance Book 1")
+		asset_depr_schedule_doc_1 = get_asset_depr_schedule_doc(
+			asset.name, "Active", "Test Finance Book 1"
+		)
 		asset_depr_schedule_doc_1.clear_depr_schedule()
 		self.assertEqual(len(asset_depr_schedule_doc_1.get("depreciation_schedule")), 3)
 
-		asset_depr_schedule_doc_2 = get_asset_depr_schedule_doc(asset.name, "Active", "Test Finance Book 2")
+		asset_depr_schedule_doc_2 = get_asset_depr_schedule_doc(
+			asset.name, "Active", "Test Finance Book 2"
+		)
 		asset_depr_schedule_doc_2.clear_depr_schedule()
 		self.assertEqual(len(asset_depr_schedule_doc_2.get("depreciation_schedule")), 3)
 
-		asset_depr_schedule_doc_3 = get_asset_depr_schedule_doc(asset.name, "Active", "Test Finance Book 3")
+		asset_depr_schedule_doc_3 = get_asset_depr_schedule_doc(
+			asset.name, "Active", "Test Finance Book 3"
+		)
 		asset_depr_schedule_doc_3.clear_depr_schedule()
 		self.assertEqual(len(asset_depr_schedule_doc_3.get("depreciation_schedule")), 0)
 
@@ -1402,10 +1418,14 @@ class TestDepreciationBasics(AssetSetup):
 		)
 		asset.save()
 
-		asset_depr_schedule_doc_1 = get_asset_depr_schedule_doc(asset.name, "Draft", "Test Finance Book 1")
+		asset_depr_schedule_doc_1 = get_asset_depr_schedule_doc(
+			asset.name, "Draft", "Test Finance Book 1"
+		)
 		self.assertEqual(len(asset_depr_schedule_doc_1.get("depreciation_schedule")), 3)
 
-		asset_depr_schedule_doc_2 = get_asset_depr_schedule_doc(asset.name, "Draft", "Test Finance Book 2")
+		asset_depr_schedule_doc_2 = get_asset_depr_schedule_doc(
+			asset.name, "Draft", "Test Finance Book 2"
+		)
 		self.assertEqual(len(asset_depr_schedule_doc_2.get("depreciation_schedule")), 6)
 
 	def test_depreciation_entry_cancellation(self):

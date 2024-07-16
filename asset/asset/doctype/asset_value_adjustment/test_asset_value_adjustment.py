@@ -4,6 +4,7 @@
 import unittest
 
 import frappe
+from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 from frappe.utils import add_days, cstr, get_last_day, getdate, nowdate
 
 from asset.asset.doctype.asset.asset import get_asset_value_after_depreciation
@@ -12,7 +13,6 @@ from asset.asset.doctype.asset.test_asset import create_asset_data
 from asset.asset.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,
 )
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
 
 class TestAssetValueAdjustment(unittest.TestCase):
@@ -23,7 +23,9 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		)
 
 	def test_current_asset_value(self):
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location"
+		)
 
 		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
 		asset_doc = frappe.get_doc("Asset", asset_name)
@@ -50,7 +52,9 @@ class TestAssetValueAdjustment(unittest.TestCase):
 		self.assertEqual(current_value, 100000.0)
 
 	def test_asset_depreciation_value_adjustment(self):
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=120000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro", qty=1, rate=120000.0, location="Test Location"
+		)
 
 		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
 		asset_doc = frappe.get_doc("Asset", asset_name)

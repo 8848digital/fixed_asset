@@ -1,6 +1,5 @@
-import os
-
 import json
+import os
 
 import frappe
 from frappe import _
@@ -20,7 +19,7 @@ def after_install():
 def before_uninstall():
 	delete_custom_fields()
 
-	
+
 def create_custom_fields():
 	CUSTOM_FIELDS = {}
 	print("Creating/Updating Custom Fields....")

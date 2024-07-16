@@ -28,9 +28,7 @@ required_apps = ["frappe", "erpnext"]
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-doctype_js = {
-    "Company" : "asset/customizations/company/company.js"
-}
+doctype_js = {"Company": "asset/customizations/company/company.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -141,7 +139,7 @@ scheduler_events = {
 	"daily": [
 		"asset.asset.doctype.asset.asset.update_maintenance_status",
 		"asset.asset.doctype.asset.asset.make_post_gl_entry",
-        "asset.asset.doctype.asset_maintenance_log.asset_maintenance_log.update_asset_maintenance_log_status",
+		"asset.asset.doctype.asset_maintenance_log.asset_maintenance_log.update_asset_maintenance_log_status",
 	],
 	# "hourly": [
 	# 	"asset.tasks.hourly"
@@ -149,12 +147,12 @@ scheduler_events = {
 	# "weekly": [
 	# 	"asset.tasks.weekly"
 	# ],
-    "daily_long": [
+	"daily_long": [
 		"asset.asset.doctype.asset.depreciation.post_depreciation_entries",
 	],
 	# "monthly": [
 	# 	"asset.tasks.monthly"
-	# ], 
+	# ],
 }
 
 # Testing

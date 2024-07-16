@@ -7,7 +7,10 @@ erpnext.company.setup_queries = function (frm) {
 				"accumulated_depreciation_account",
 				{ root_type: "Asset", account_type: "Accumulated Depreciation" },
 			],
-			["depreciation_expense_account", { root_type: "Expense", account_type: "Depreciation" }],
+			[
+				"depreciation_expense_account",
+				{ root_type: "Expense", account_type: "Depreciation" },
+			],
 			["disposal_account", { report_type: "Profit and Loss" }],
 			["depreciation_cost_center", {}],
 			["capital_work_in_progress_account", { account_type: "Capital Work in Progress" }],
