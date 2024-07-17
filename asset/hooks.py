@@ -30,7 +30,8 @@ required_apps = ["frappe", "erpnext"]
 # include js in doctype views
 doctype_js = {
     "Company": "asset/customizations/company/company.js",
-    "Item": "asset/customizations/item/item.js"
+    "Item": "asset/customizations/item/item.js",
+    "Purchase Receipt": "asset/customizations/purchase_receipt/purchase_receipt.js"
     
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
@@ -119,9 +120,9 @@ before_uninstall = "asset.uninstall.before_uninstall"
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt.AssetPurchaseReceipt"
+}
 
 # Document Events
 # ---------------
@@ -134,6 +135,9 @@ doc_events = {
     "Item": {
 		"validate": "asset.asset.customizations.item.item.validate",
         "onload": "asset.asset.customizations.item.item.onload"
+	},
+    "Purchase Receipt": {
+        "validate": "asset.asset.customizations.purchase_receipt.purchase_receipt.validate"
 	}
 }
 
@@ -171,16 +175,18 @@ scheduler_events = {
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "asset.event.get_events"
-# }
+override_whitelisted_methods = {
+	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_receipt": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_receipt",
+    "erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_invoice",
+    "erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice_from_portal": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_invoice_from_portal"
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
-# override_doctype_dashboards = {
-# 	"Task": "asset.task.get_dashboard_data"
-# }
+override_doctype_dashboards = {
+	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt_dashboard.get_dashboard_for_purchase_receipt"
+}
 
 # exempt linked doctypes from being automatically cancelled
 #
