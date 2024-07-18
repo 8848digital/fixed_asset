@@ -1,6 +1,7 @@
 import frappe
 from frappe import _, bold
 
+
 def validate(self, event):
 	validate_item_type(self)
 	validate_fixed_asset(self)
@@ -29,14 +30,13 @@ def validate_fixed_asset(self):
 	if not self.is_fixed_asset:
 		asset = frappe.db.get_all("Asset", filters={"item_code": self.name, "docstatus": 1}, limit=1)
 		if asset:
-			frappe.throw(
-				_('"Is Fixed Asset" cannot be unchecked, as Asset record exists against the item')
-			)
+			frappe.throw(_('"Is Fixed Asset" cannot be unchecked, as Asset record exists against the item'))
 
 
 @frappe.whitelist()
 def get_asset_naming_series():
 	from asset.asset.doctype.asset.asset import get_asset_naming_series
-	print("=======================0000===============",get_asset_naming_series())
+
+	print("=======================0000===============", get_asset_naming_series())
 
 	return get_asset_naming_series()

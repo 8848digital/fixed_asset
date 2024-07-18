@@ -1,16 +1,16 @@
 frappe.ui.form.on("Item", {
-    refresh: function (frm) {
-        if (frm.doc.is_fixed_asset) {
+	refresh: function (frm) {
+		if (frm.doc.is_fixed_asset) {
 			frm.trigger("is_fixed_asset");
 			frm.trigger("auto_create_assets");
 		}
-    },
-    onload: function (frm) {
+	},
+	onload: function (frm) {
 		if (frm.doc.is_fixed_asset) {
 			frm.trigger("set_asset_naming_series");
 		}
 	},
-    is_fixed_asset: function (frm) {
+	is_fixed_asset: function (frm) {
 		// set serial no to false & toggles its visibility
 		frm.set_value("has_serial_no", 0);
 		frm.set_value("has_batch_no", 0);
@@ -25,15 +25,15 @@ frappe.ui.form.on("Item", {
 
 		frm.trigger("auto_create_assets");
 	},
-    set_asset_naming_series: function (frm, asset_naming_series) {
+	set_asset_naming_series: function (frm, asset_naming_series) {
 		if ((frm.doc.__onload && frm.doc.__onload.asset_naming_series) || asset_naming_series) {
 			let naming_series =
 				(frm.doc.__onload && frm.doc.__onload.asset_naming_series) || asset_naming_series;
 			frm.set_df_property("asset_naming_series", "options", naming_series);
 		}
 	},
-    auto_create_assets: function (frm) {
+	auto_create_assets: function (frm) {
 		frm.toggle_reqd(["asset_naming_series"], frm.doc.auto_create_assets);
 		frm.toggle_display(["asset_naming_series"], frm.doc.auto_create_assets);
-	}
-})
+	},
+});

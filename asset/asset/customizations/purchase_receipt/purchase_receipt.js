@@ -79,10 +79,18 @@ erpnext.stock.PurchaseReceiptController = class PurchaseReceiptController extend
 
 			if (this.frm.doc.docstatus == 1 && this.frm.doc.status != "Closed") {
 				if (this.frm.has_perm("submit")) {
-					cur_frm.add_custom_button(__("Close"), this.close_purchase_receipt, __("Status"));
+					cur_frm.add_custom_button(
+						__("Close"),
+						this.close_purchase_receipt,
+						__("Status")
+					);
 				}
 
-				cur_frm.add_custom_button(__("Purchase Return"), this.make_purchase_return, __("Create"));
+				cur_frm.add_custom_button(
+					__("Purchase Return"),
+					this.make_purchase_return,
+					__("Create")
+				);
 
 				cur_frm.add_custom_button(
 					__("Make Stock Entry"),
@@ -107,7 +115,11 @@ erpnext.stock.PurchaseReceiptController = class PurchaseReceiptController extend
 			}
 		}
 
-		if (this.frm.doc.docstatus == 1 && this.frm.doc.status === "Closed" && this.frm.has_perm("submit")) {
+		if (
+			this.frm.doc.docstatus == 1 &&
+			this.frm.doc.status === "Closed" &&
+			this.frm.has_perm("submit")
+		) {
 			cur_frm.add_custom_button(__("Reopen"), this.reopen_purchase_receipt, __("Status"));
 		}
 

@@ -29,10 +29,10 @@ required_apps = ["frappe", "erpnext"]
 
 # include js in doctype views
 doctype_js = {
-    "Company": "asset/customizations/company/company.js",
-    "Item": "asset/customizations/item/item.js",
-    "Purchase Receipt": "asset/customizations/purchase_receipt/purchase_receipt.js"
-    
+	"Company": "asset/customizations/company/company.js",
+	"Item": "asset/customizations/item/item.js",
+	"Purchase Receipt": "asset/customizations/purchase_receipt/purchase_receipt.js",
+	"Purchase Invoice": "asset/customizations/purchase_invoice/purchase_invoice.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -121,7 +121,8 @@ before_uninstall = "asset.uninstall.before_uninstall"
 # Override standard doctype classes
 
 override_doctype_class = {
-	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt.AssetPurchaseReceipt"
+	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt.AssetPurchaseReceipt",
+	"Purchase Invoice": "asset.asset.customizations.purchase_invoice.purchase_invoice.AssetPurchaseInvoice",
 }
 
 # Document Events
@@ -132,13 +133,13 @@ doc_events = {
 	"Company": {
 		"on_update": "asset.asset.customizations.company.company.on_update",
 	},
-    "Item": {
+	"Item": {
 		"validate": "asset.asset.customizations.item.item.validate",
-        "onload": "asset.asset.customizations.item.item.onload"
+		"onload": "asset.asset.customizations.item.item.onload",
 	},
-    "Purchase Receipt": {
-        "validate": "asset.asset.customizations.purchase_receipt.purchase_receipt.validate"
-	}
+	"Purchase Receipt": {
+		"validate": "asset.asset.customizations.purchase_receipt.purchase_receipt.validate"
+	},
 }
 
 # Scheduled Tasks
@@ -177,15 +178,17 @@ scheduler_events = {
 #
 override_whitelisted_methods = {
 	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_receipt": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_receipt",
-    "erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_invoice",
-    "erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice_from_portal": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_invoice_from_portal"
+	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_invoice",
+	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice_from_portal": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_invoice_from_portal",
+	"erpnext.accounts.doctype.purchase_invoice.purchase_invoice.make_purchase_receipt": "asset.asset.customizations.purchase_invoice.purchase_invoice.make_purchase_receipt",
 }
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
 override_doctype_dashboards = {
-	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt_dashboard.get_dashboard_for_purchase_receipt"
+	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt_dashboard.get_dashboard_for_purchase_receipt",
+	"Purchase Invoice": "asset.asset.customizations.purchase_invoice.purchase_invoice_dashboard.get_dashboard_for_purchase_invoice",
 }
 
 # exempt linked doctypes from being automatically cancelled

@@ -1,21 +1,20 @@
+import erpnext
 import frappe
+from erpnext.accounts.utils import get_account_currency
+from erpnext.controllers.accounts_controller import merge_taxes
+from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
+	PurchaseReceipt,
+	get_invoiced_qty_map,
+	get_item_account_wise_additional_cost,
+	get_returned_qty_map,
+	get_stock_value_difference,
+)
 from frappe import _, throw
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import cint, flt
 
 from asset.asset.doctype.asset.asset import get_asset_account, is_cwip_accounting_enabled
 from asset.asset.doctype.asset_category.asset_category import get_asset_category_account
-
-import erpnext
-from erpnext.accounts.utils import get_account_currency
-from erpnext.controllers.accounts_controller import merge_taxes
-from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
-    PurchaseReceipt, 
-	get_returned_qty_map,
-	get_invoiced_qty_map,
-	get_stock_value_difference,
-	get_item_account_wise_additional_cost
-)
 
 
 class AssetPurchaseReceipt(PurchaseReceipt):
@@ -25,7 +24,9 @@ class AssetPurchaseReceipt(PurchaseReceipt):
 		)
 
 		provisional_accounting_for_non_stock_items = cint(
-			frappe.db.get_value("Company", self.company, "enable_provisional_accounting_for_non_stock_items")
+			frappe.db.get_value(
+				"Company", self.company, "enable_provisional_accounting_for_non_stock_items"
+			)
 		)
 
 		exchange_rate_map, net_rate_map = get_purchase_document_details(self)
@@ -265,12 +266,10 @@ class AssetPurchaseReceipt(PurchaseReceipt):
 				elif warehouse_account.get(d.warehouse):
 					stock_value_diff = get_stock_value_difference(self.name, d.name, d.warehouse)
 					stock_asset_account_name = warehouse_account[d.warehouse]["account"]
-					supplier_warehouse_account = warehouse_account.get(self.supplier_warehouse, {}).get(
-						"account"
+					supplier_warehouse_account = warehouse_account.get(self.supplier_warehouse, {}).get("account")
+					supplier_warehouse_account_currency = warehouse_account.get(self.supplier_warehouse, {}).get(
+						"account_currency"
 					)
-					supplier_warehouse_account_currency = warehouse_account.get(
-						self.supplier_warehouse, {}
-					).get("account_currency")
 
 					# If PR is sub-contracted and fg item rate is zero
 					# in that case if account for source and target warehouse are same,
@@ -303,7 +302,7 @@ class AssetPurchaseReceipt(PurchaseReceipt):
 				+ ": \n"
 				+ "\n".join(warehouse_with_no_account)
 			)
-	
+
 	def update_assets(self, item, valuation_rate):
 		assets = frappe.db.get_all(
 			"Asset",
@@ -321,6 +320,7 @@ class AssetPurchaseReceipt(PurchaseReceipt):
 					"purchase_amount": purchase_amount,
 				},
 			)
+
 
 def validate(self, event):
 	validate_cwip_accounts(self)
@@ -353,7 +353,9 @@ def make_purchase_invoice(source_name, target_doc=None, args=None):
 			frappe.throw(_("All items have already been Invoiced/Returned"))
 
 		doc = frappe.get_doc(target)
-		doc.payment_terms_template = get_payment_terms_template(source.supplier, "Supplier", source.company)
+		doc.payment_terms_template = get_payment_terms_template(
+			source.supplier, "Supplier", source.company
+		)
 		doc.run_method("onload")
 		doc.run_method("set_missing_values")
 
@@ -365,7 +367,9 @@ def make_purchase_invoice(source_name, target_doc=None, args=None):
 
 	def update_item(source_doc, target_doc, source_parent):
 		target_doc.qty, returned_qty = get_pending_qty(source_doc)
-		if frappe.db.get_single_value("Buying Settings", "bill_for_rejected_quantity_in_purchase_invoice"):
+		if frappe.db.get_single_value(
+			"Buying Settings", "bill_for_rejected_quantity_in_purchase_invoice"
+		):
 			target_doc.rejected_qty = 0
 		target_doc.stock_qty = flt(target_doc.qty) * flt(
 			target_doc.conversion_factor, target_doc.precision("conversion_factor")
@@ -374,12 +378,16 @@ def make_purchase_invoice(source_name, target_doc=None, args=None):
 
 	def get_pending_qty(item_row):
 		qty = item_row.qty
-		if frappe.db.get_single_value("Buying Settings", "bill_for_rejected_quantity_in_purchase_invoice"):
+		if frappe.db.get_single_value(
+			"Buying Settings", "bill_for_rejected_quantity_in_purchase_invoice"
+		):
 			qty = item_row.received_qty
 
 		pending_qty = qty - invoiced_qty_map.get(item_row.name, 0)
 
-		if frappe.db.get_single_value("Buying Settings", "bill_for_rejected_quantity_in_purchase_invoice"):
+		if frappe.db.get_single_value(
+			"Buying Settings", "bill_for_rejected_quantity_in_purchase_invoice"
+		):
 			return pending_qty, 0
 
 		returned_qty = flt(returned_qty_map.get(item_row.name, 0))
