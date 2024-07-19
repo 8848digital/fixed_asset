@@ -123,6 +123,7 @@ before_uninstall = "asset.uninstall.before_uninstall"
 override_doctype_class = {
 	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt.AssetPurchaseReceipt",
 	"Purchase Invoice": "asset.asset.customizations.purchase_invoice.purchase_invoice.AssetPurchaseInvoice",
+	"Landed Cost Voucher": "asset.asset.customizations.landed_cost_voucher.landed_cost_voucher.AssetLandedCostVoucher",
 }
 
 # Document Events
