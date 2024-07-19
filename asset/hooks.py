@@ -33,6 +33,7 @@ doctype_js = {
 	"Item": "asset/customizations/item/item.js",
 	"Purchase Receipt": "asset/customizations/purchase_receipt/purchase_receipt.js",
 	"Purchase Invoice": "asset/customizations/purchase_invoice/purchase_invoice.js",
+	"Serial and Batch Bundle": "asset/customizations/serial_and_batch_bundle/serial_and_batch_bundle.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -124,6 +125,7 @@ override_doctype_class = {
 	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt.AssetPurchaseReceipt",
 	"Purchase Invoice": "asset.asset.customizations.purchase_invoice.purchase_invoice.AssetPurchaseInvoice",
 	"Landed Cost Voucher": "asset.asset.customizations.landed_cost_voucher.landed_cost_voucher.AssetLandedCostVoucher",
+	"Serial and Batch Bundle": "asset.asset.customizations.serial_and_batch_bundle.serial_and_batch_bundle.AssetSerialandBatchBundle",
 }
 
 # Document Events

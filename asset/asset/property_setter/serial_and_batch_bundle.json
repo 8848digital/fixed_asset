@@ -1,0 +1,11 @@
+{
+    "Serial and Batch Bundle": [
+        {
+            "doctype": "Serial and Batch Bundle",
+            "fieldname": "type_of_transaction",
+            "property": "options",
+            "property_type": "Small Text",
+            "value": "\nInward\nOutward\nMaintenance\nAsset Repair"
+        }
+    ]
+}
