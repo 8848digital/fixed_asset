@@ -1,9 +1,8 @@
+import erpnext
 import frappe
+from erpnext.stock import get_warehouse_account_map
 from frappe import _, throw
 from frappe.utils import get_link_to_form
-
-import erpnext
-from erpnext.stock import get_warehouse_account_map
 
 from asset.asset.doctype.asset.asset import is_cwip_accounting_enabled
 from asset.asset.doctype.asset_category.asset_category import get_asset_category_account
@@ -65,9 +64,7 @@ def asset_set_expense_account(self, for_validate=False):
 
 					if negative_expense_booked_in_pr:
 						if (
-							for_validate
-							and item.expense_account
-							and item.expense_account != stock_not_billed_account
+							for_validate and item.expense_account and item.expense_account != stock_not_billed_account
 						):
 							msg = _(
 								"Row {0}: Expense Head changed to {1} because expense is booked against this account in Purchase Receipt {2}"
@@ -82,11 +79,7 @@ def asset_set_expense_account(self, for_validate=False):
 				else:
 					# If no purchase receipt present then book expense in 'Stock Received But Not Billed'
 					# This is done in cases when Purchase Invoice is created before Purchase Receipt
-					if (
-						for_validate
-						and item.expense_account
-						and item.expense_account != stock_not_billed_account
-					):
+					if for_validate and item.expense_account and item.expense_account != stock_not_billed_account:
 						msg = _(
 							"Row {0}: Expense Head changed to {1} as no Purchase Receipt is created against Item {2}."
 						).format(
@@ -118,9 +111,7 @@ def asset_set_expense_account(self, for_validate=False):
 
 			if item.pr_detail:
 				if not self.asset_received_but_not_billed:
-					self.asset_received_but_not_billed = self.get_company_default(
-						"asset_received_but_not_billed"
-					)
+					self.asset_received_but_not_billed = self.get_company_default("asset_received_but_not_billed")
 
 				# check if 'Asset Received But Not Billed' account is credited in Purchase receipt or not
 				arbnb_booked_in_pr = frappe.db.get_value(
@@ -141,15 +132,11 @@ def asset_set_expense_account(self, for_validate=False):
 					if is_cwip_accounting_enabled(item.asset_category)
 					else "fixed_asset_account"
 				)
-				account = get_asset_category_account(
-					account_type, item=item.item_code, company=self.company
-				)
+				account = get_asset_category_account(account_type, item=item.item_code, company=self.company)
 				if not account:
 					form_link = get_link_to_form("Asset Category", item.asset_category)
 					throw(
-						_("Please set Fixed Asset Account in {} against {}.").format(
-							form_link, self.company
-						),
+						_("Please set Fixed Asset Account in {} against {}.").format(form_link, self.company),
 						title=_("Missing Account"),
 					)
 			item.expense_account = account

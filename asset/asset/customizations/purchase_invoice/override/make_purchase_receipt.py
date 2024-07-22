@@ -1,7 +1,7 @@
 import frappe
 from frappe.model.mapper import get_mapped_doc
 from frappe.utils import flt
-	
+
 
 def asset_make_purchase_receipt(source_name, target_doc=None):
 	def update_item(obj, target, source_parent):

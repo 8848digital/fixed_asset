@@ -11,7 +11,7 @@ from asset.asset.customizations.purchase_order.override.make_purchase_receipt im
 
 @frappe.whitelist()
 def make_purchase_receipt(source_name, target_doc=None):
-	asset_make_purchase_receipt(source_name, target_doc=None)
+	return asset_make_purchase_receipt(source_name, target_doc=None)
 
 
 @frappe.whitelist()

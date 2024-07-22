@@ -11,4 +11,4 @@ from asset.asset.customizations.serial_and_batch_bundle.override.child_table imp
 class AssetSerialandBatchBundle(SerialandBatchBundle):
 	@property
 	def child_table(self):
-		asset_child_table(self)
+		return asset_child_table(self)
