@@ -34,6 +34,7 @@ doctype_js = {
 	"Purchase Receipt": "asset/customizations/purchase_receipt/purchase_receipt.js",
 	"Purchase Invoice": "asset/customizations/purchase_invoice/purchase_invoice.js",
 	"Serial and Batch Bundle": "asset/customizations/serial_and_batch_bundle/serial_and_batch_bundle.js",
+	"Sales Invoice": "asset/customizations/sales_invoice/sales_invoice.js",
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -143,6 +144,11 @@ doc_events = {
 	"Purchase Receipt": {
 		"validate": "asset.asset.customizations.purchase_receipt.purchase_receipt.validate"
 	},
+	"Journal Entry": {
+		"on_submit": "asset.asset.customizations.journal_entry.journal_entry.on_submit",
+		"on_cancel": "asset.asset.customizations.journal_entry.journal_entry.on_cancel",
+	},
+	"Sales Invoice": {"validate": "asset.asset.customizations.sales_invoice.sales_invoice.validate"},
 }
 
 # Scheduled Tasks
