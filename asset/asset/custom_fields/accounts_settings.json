@@ -1,0 +1,26 @@
+{
+ "Accounts Settings": [
+    {
+        "fieldname": "assets_tab",
+        "fieldtype": "Tab Break",
+        "label": "Assets",
+        "insert_after": "post_change_gl_entries",
+        "module": "asset"
+    },
+    {
+        "fieldname": "asset_settings_section",
+        "fieldtype": "Section Break",
+        "label": "Asset Settings",
+        "insert_after": "assets_tab",
+        "module": "asset"
+    },
+    {
+        "default": "1",
+        "fieldname": "book_asset_depreciation_entry_automatically",
+        "fieldtype": "Check",
+        "label": "Book Asset Depreciation Entry Automatically",
+        "insert_after": "asset_settings_section",
+        "module": "asset"
+    }
+ ]
+}
