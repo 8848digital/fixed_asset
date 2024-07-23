@@ -1,0 +1,18 @@
+{
+    "Journal Entry Account": [
+        {
+            "doctype": "Journal Entry Account",
+            "fieldname": "reference_type",
+            "property": "options",
+            "property_type": "Small Text",
+            "value": "\nSales Invoice\nPurchase Invoice\nJournal Entry\nSales Order\nPurchase Order\nExpense Claim\nAsset\nLoan\nPayroll Entry\nEmployee Advance\nExchange Rate Revaluation\nInvoice Discounting\nFees\nFull and Final Statement\nPayment Entry"
+        },
+        {
+            "doctype": "Journal Entry Account",
+            "fieldname": "reference_due_date",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:doc.reference_type&&!in_list(doc.reference_type, ['Expense Claim', 'Asset', 'Employee Loan', 'Employee Advance'])"
+        }
+    ]
+}
