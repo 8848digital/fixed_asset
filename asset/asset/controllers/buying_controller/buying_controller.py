@@ -59,7 +59,6 @@ class AssetBuyingController(BuyingController):
 	
 
 	def on_submit(self):
-		super(BuyingController, self).on_submit()
 		if self.get("is_return"):
 			return
 

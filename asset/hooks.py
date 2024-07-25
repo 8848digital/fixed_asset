@@ -35,6 +35,8 @@ doctype_js = {
 	"Purchase Invoice": "asset/customizations/purchase_invoice/purchase_invoice.js",
 	"Serial and Batch Bundle": "asset/customizations/serial_and_batch_bundle/serial_and_batch_bundle.js",
 	"Sales Invoice": "asset/customizations/sales_invoice/sales_invoice.js",
+    "Journal Entry": "asset/customizations/journal_entry/journal_entry.js",
+    "Product Bundle": "asset/customizations/product_bundle/product_bundle.js"
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -132,8 +134,16 @@ override_doctype_class = {
 # Document Events
 # ---------------
 # Hook on document methods and events
+period_closing_doctypes = [
+	"Asset",
+	"Asset Capitalization",
+	"Asset Repair"
+]
 
 doc_events = {
+    tuple(period_closing_doctypes): {
+		"validate": "erpnext.accounts.doctype.accounting_period.accounting_period.validate_accounting_period_on_doc_save",
+	},
 	"Company": {
 		"on_update": "asset.asset.customizations.company.company.on_update",
 	},
@@ -149,6 +159,10 @@ doc_events = {
 		"on_cancel": "asset.asset.customizations.journal_entry.journal_entry.on_cancel",
 	},
 	"Sales Invoice": {"validate": "asset.asset.customizations.sales_invoice.sales_invoice.validate"},
+    "Product Bundle": {
+        "validate": "asset.asset.customizations.product_bundle.product_bundle.validate"
+	},
+    "GL Entry": {"validate":"asset.asset.customizations.gl_entry.gl_entry.validate"}
 }
 
 # Scheduled Tasks
@@ -190,6 +204,8 @@ override_whitelisted_methods = {
 	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_invoice",
 	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice_from_portal": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_invoice_from_portal",
 	"erpnext.accounts.doctype.purchase_invoice.purchase_invoice.make_purchase_receipt": "asset.asset.customizations.purchase_invoice.purchase_invoice.make_purchase_receipt",
+    "erpnext.selling.page.point_of_sale.point_of_sale.get_items": "asset.asset.customizations.point_of_sale.point_of_sale.get_items",
+    "erpnext.stock.doctype.material_request.material_request.make_purchase_order": "asset.asset.customizations.material_request.material_request.make_purchase_order",
 }
 #
 # each overriding function accepts a `data` argument;
@@ -256,12 +272,6 @@ override_doctype_dashboards = {
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-
-period_closing_doctypes = [
-	"Asset",
-	"Asset Capitalization",
-	"Asset Repair",
-]
 
 accounting_dimension_doctypes = [
 	"Asset",
