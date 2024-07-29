@@ -11,7 +11,7 @@ required_apps = ["frappe", "erpnext"]
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/asset/css/asset.css"
-# app_include_js = "/assets/asset/js/asset.js"
+app_include_js = "asset.bundle.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/asset/css/asset.css"
@@ -36,7 +36,8 @@ doctype_js = {
 	"Serial and Batch Bundle": "asset/customizations/serial_and_batch_bundle/serial_and_batch_bundle.js",
 	"Sales Invoice": "asset/customizations/sales_invoice/sales_invoice.js",
     "Journal Entry": "asset/customizations/journal_entry/journal_entry.js",
-    "Product Bundle": "asset/customizations/product_bundle/product_bundle.js"
+    "Product Bundle": "asset/customizations/product_bundle/product_bundle.js",
+    "BOM": "asset/customizations/bom/bom.js"
 }
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
@@ -142,7 +143,7 @@ period_closing_doctypes = [
 
 doc_events = {
     tuple(period_closing_doctypes): {
-		"validate": "erpnext.accounts.doctype.accounting_period.accounting_period.validate_accounting_period_on_doc_save",
+		"validate": "asset.asset.customizations.accounting_period.accounting_period.validate_accounting_period_on_doc_save",
 	},
 	"Company": {
 		"on_update": "asset.asset.customizations.company.company.on_update",
@@ -206,6 +207,7 @@ override_whitelisted_methods = {
 	"erpnext.accounts.doctype.purchase_invoice.purchase_invoice.make_purchase_receipt": "asset.asset.customizations.purchase_invoice.purchase_invoice.make_purchase_receipt",
     "erpnext.selling.page.point_of_sale.point_of_sale.get_items": "asset.asset.customizations.point_of_sale.point_of_sale.get_items",
     "erpnext.stock.doctype.material_request.material_request.make_purchase_order": "asset.asset.customizations.material_request.material_request.make_purchase_order",
+    "erpnext.stock.get_item_details.get_item_details": "asset.asset.customizations.get_item_details.get_item_details.get_item_details"
 }
 #
 # each overriding function accepts a `data` argument;
