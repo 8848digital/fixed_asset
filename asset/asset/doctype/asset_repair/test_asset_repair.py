@@ -4,12 +4,14 @@
 import unittest
 
 import frappe
+from erpnext.stock.doctype.item.test_item import create_item
+from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
+	get_serial_nos_from_bundle,
+	make_serial_batch_bundle,
+)
 from frappe.utils import flt, nowdate, nowtime, today
 
-from asset.asset.doctype.asset.asset import (
-	get_asset_account,
-	get_asset_value_after_depreciation,
-)
+from asset.asset.doctype.asset.asset import get_asset_account, get_asset_value_after_depreciation
 from asset.asset.doctype.asset.test_asset import (
 	create_asset,
 	create_asset_data,
@@ -17,11 +19,6 @@ from asset.asset.doctype.asset.test_asset import (
 )
 from asset.asset.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,
-)
-from erpnext.stock.doctype.item.test_item import create_item
-from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
-	get_serial_nos_from_bundle,
-	make_serial_batch_bundle,
 )
 
 
@@ -185,7 +182,9 @@ class TestAssetRepair(unittest.TestCase):
 			frappe.get_doc("Purchase Invoice", asset_repair.purchase_invoice).items[0].expense_account
 		)
 		stock_entry_expense_account = (
-			frappe.get_doc("Stock Entry", {"asset_repair": asset_repair.name}).get("items")[0].expense_account
+			frappe.get_doc("Stock Entry", {"asset_repair": asset_repair.name})
+			.get("items")[0]
+			.expense_account
 		)
 
 		expected_values = {
@@ -199,7 +198,9 @@ class TestAssetRepair(unittest.TestCase):
 			self.assertEqual(expected_values[d.account][1], d.credit)
 
 	def test_gl_entries_with_periodical_inventory(self):
-		frappe.db.set_value("Company", "_Test Company", "default_expense_account", "Cost of Goods Sold - _TC")
+		frappe.db.set_value(
+			"Company", "_Test Company", "default_expense_account", "Cost of Goods Sold - _TC"
+		)
 		asset_repair = create_asset_repair(
 			capitalize_repair_cost=1,
 			stock_consumption=1,

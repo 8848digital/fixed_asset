@@ -54,9 +54,7 @@ class AssetMovement(Document):
 				if d.source_location:
 					if current_location != d.source_location:
 						frappe.throw(
-							_("Asset {0} does not belongs to the location {1}").format(
-								d.asset, d.source_location
-							)
+							_("Asset {0} does not belongs to the location {1}").format(d.asset, d.source_location)
 						)
 				else:
 					d.source_location = current_location
@@ -81,25 +79,19 @@ class AssetMovement(Document):
 						title=_("Incorrect Movement Purpose"),
 					)
 				if not d.target_location:
-					frappe.throw(
-						_("Target Location is required while transferring Asset {0}").format(d.asset)
-					)
+					frappe.throw(_("Target Location is required while transferring Asset {0}").format(d.asset))
 				if d.source_location == d.target_location:
 					frappe.throw(_("Source and Target Location cannot be same"))
 
 			if self.purpose == "Receipt":
 				if not (d.source_location) and not d.target_location and not d.to_employee:
 					frappe.throw(
-						_("Target Location or To Employee is required while receiving Asset {0}").format(
-							d.asset
-						)
+						_("Target Location or To Employee is required while receiving Asset {0}").format(d.asset)
 					)
 				elif d.source_location:
 					if d.from_employee and not d.target_location:
 						frappe.throw(
-							_(
-								"Target Location is required while receiving Asset {0} from an employee"
-							).format(d.asset)
+							_("Target Location is required while receiving Asset {0} from an employee").format(d.asset)
 						)
 					elif d.to_employee and d.target_location:
 						frappe.throw(
@@ -170,9 +162,7 @@ class AssetMovement(Document):
 			elif current_location:
 				add_asset_activity(
 					d.asset,
-					_("Asset transferred to Location {0}").format(
-						get_link_to_form("Location", current_location)
-					),
+					_("Asset transferred to Location {0}").format(get_link_to_form("Location", current_location)),
 				)
 			elif current_employee:
 				add_asset_activity(

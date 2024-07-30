@@ -1,7 +1,9 @@
 # Copyright (c) 2022, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+import erpnext
 import frappe
+from erpnext.accounts.utils import get_fiscal_year
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import (
@@ -18,9 +20,6 @@ from frappe.utils import (
 	month_diff,
 )
 
-import erpnext
-from erpnext.accounts.utils import get_fiscal_year
-
 
 class AssetDepreciationSchedule(Document):
 	# begin: auto-generated types
@@ -31,9 +30,7 @@ class AssetDepreciationSchedule(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from asset.asset.doctype.depreciation_schedule.depreciation_schedule import (
-			DepreciationSchedule,
-		)
+		from asset.asset.doctype.depreciation_schedule.depreciation_schedule import DepreciationSchedule
 
 		amended_from: DF.Link | None
 		asset: DF.Link
@@ -161,7 +158,8 @@ class AssetDepreciationSchedule(Document):
 		return (
 			asset_doc.gross_purchase_amount != self.gross_purchase_amount
 			or asset_doc.opening_accumulated_depreciation != self.opening_accumulated_depreciation
-			or asset_doc.opening_number_of_booked_depreciations != self.opening_number_of_booked_depreciations
+			or asset_doc.opening_number_of_booked_depreciations
+			!= self.opening_number_of_booked_depreciations
 		)
 
 	def not_manual_depr_or_have_manual_depr_details_been_modified(self, row):
@@ -194,7 +192,9 @@ class AssetDepreciationSchedule(Document):
 		self.finance_book = row.finance_book
 		self.finance_book_id = row.idx
 		self.opening_accumulated_depreciation = asset_doc.opening_accumulated_depreciation or 0
-		self.opening_number_of_booked_depreciations = asset_doc.opening_number_of_booked_depreciations or 0
+		self.opening_number_of_booked_depreciations = (
+			asset_doc.opening_number_of_booked_depreciations or 0
+		)
 		self.gross_purchase_amount = asset_doc.gross_purchase_amount
 		self.depreciation_method = row.depreciation_method
 		self.total_number_of_depreciations = row.total_number_of_depreciations
@@ -275,7 +275,9 @@ class AssetDepreciationSchedule(Document):
 			row.depreciation_method in ("Written Down Value", "Double Declining Balance")
 			and cint(row.frequency_of_depreciation) != 12
 		):
-			has_wdv_or_dd_non_yearly_pro_rata = _check_is_pro_rata(asset_doc, row, wdv_or_dd_non_yearly=True)
+			has_wdv_or_dd_non_yearly_pro_rata = _check_is_pro_rata(
+				asset_doc, row, wdv_or_dd_non_yearly=True
+			)
 
 		skip_row = False
 		should_get_last_day = is_last_day_of_the_month(row.depreciation_start_date)
@@ -378,10 +380,7 @@ class AssetDepreciationSchedule(Document):
 					from_date = get_last_day(
 						add_months(
 							getdate(asset_doc.available_for_use_date),
-							(
-								(self.opening_number_of_booked_depreciations - 1)
-								* row.frequency_of_depreciation
-							),
+							((self.opening_number_of_booked_depreciations - 1) * row.frequency_of_depreciation),
 						)
 					)
 				else:
@@ -403,8 +402,7 @@ class AssetDepreciationSchedule(Document):
 					# In case of increase_in_asset_life, the asset.to_date is already set on asset_repair submission
 					asset_doc.to_date = add_months(
 						asset_doc.available_for_use_date,
-						(n + self.opening_number_of_booked_depreciations)
-						* cint(row.frequency_of_depreciation),
+						(n + self.opening_number_of_booked_depreciations) * cint(row.frequency_of_depreciation),
 					)
 
 				depreciation_amount_without_pro_rata = depreciation_amount
@@ -630,9 +628,12 @@ def get_depreciation_amount(
 	prev_per_day_depr=0,
 ):
 	if fb_row.depreciation_method in ("Straight Line", "Manual"):
-		return get_straight_line_or_manual_depr_amount(
-			asset_depr_schedule, asset, fb_row, schedule_idx, number_of_pending_depreciations
-		), None
+		return (
+			get_straight_line_or_manual_depr_amount(
+				asset_depr_schedule, asset, fb_row, schedule_idx, number_of_pending_depreciations
+			),
+			None,
+		)
 	else:
 		return get_wdv_or_dd_depr_amount(
 			asset,
@@ -695,7 +696,9 @@ def get_straight_line_or_manual_depr_amount(
 				flt(asset.gross_purchase_amount)
 				- flt(asset.opening_accumulated_depreciation)
 				- flt(row.expected_value_after_useful_life)
-			) / flt(row.total_number_of_depreciations - asset.opening_number_of_booked_depreciations)
+			) / flt(
+				row.total_number_of_depreciations - asset.opening_number_of_booked_depreciations
+			)
 
 
 def get_daily_prorata_based_straight_line_depr(
@@ -785,15 +788,18 @@ def get_default_wdv_or_dd_depr_amount(
 	prev_per_day_depr,
 ):
 	if not fb_row.daily_prorata_based or cint(fb_row.frequency_of_depreciation) == 12:
-		return _get_default_wdv_or_dd_depr_amount(
-			asset,
-			fb_row,
-			depreciable_value,
-			schedule_idx,
-			prev_depreciation_amount,
-			has_wdv_or_dd_non_yearly_pro_rata,
-			asset_depr_schedule,
-		), None
+		return (
+			_get_default_wdv_or_dd_depr_amount(
+				asset,
+				fb_row,
+				depreciable_value,
+				schedule_idx,
+				prev_depreciation_amount,
+				has_wdv_or_dd_non_yearly_pro_rata,
+				asset_depr_schedule,
+			),
+			None,
+		)
 	else:
 		return _get_daily_prorata_based_default_wdv_or_dd_depr_amount(
 			asset,
@@ -851,19 +857,25 @@ def _get_daily_prorata_based_default_wdv_or_dd_depr_amount(
 	asset_depr_schedule,
 	prev_per_day_depr,
 ):
-	if has_wdv_or_dd_non_yearly_pro_rata:  # If applicable days for ther first month is less than full month
+	if (
+		has_wdv_or_dd_non_yearly_pro_rata
+	):  # If applicable days for ther first month is less than full month
 		if schedule_idx == 0:
 			return flt(depreciable_value) * (flt(fb_row.rate_of_depreciation) / 100), None
 
 		elif schedule_idx % (12 / cint(fb_row.frequency_of_depreciation)) == 1:  # Year changes
 			return get_monthly_depr_amount(fb_row, schedule_idx, depreciable_value)
 		else:
-			return get_monthly_depr_amount_based_on_prev_per_day_depr(fb_row, schedule_idx, prev_per_day_depr)
+			return get_monthly_depr_amount_based_on_prev_per_day_depr(
+				fb_row, schedule_idx, prev_per_day_depr
+			)
 	else:
 		if schedule_idx % (12 / cint(fb_row.frequency_of_depreciation)) == 0:  # year changes
 			return get_monthly_depr_amount(fb_row, schedule_idx, depreciable_value)
 		else:
-			return get_monthly_depr_amount_based_on_prev_per_day_depr(fb_row, schedule_idx, prev_per_day_depr)
+			return get_monthly_depr_amount_based_on_prev_per_day_depr(
+				fb_row, schedule_idx, prev_per_day_depr
+			)
 
 
 def get_monthly_depr_amount(fb_row, schedule_idx, depreciable_value):
@@ -1032,7 +1044,9 @@ def get_temp_asset_depr_schedule_doc(
 	update_asset_finance_book_row=False,
 	new_depr_schedule=None,
 ):
-	current_asset_depr_schedule_doc = get_asset_depr_schedule_doc(asset_doc.name, "Active", row.finance_book)
+	current_asset_depr_schedule_doc = get_asset_depr_schedule_doc(
+		asset_doc.name, "Active", row.finance_book
+	)
 
 	if not current_asset_depr_schedule_doc:
 		frappe.throw(
@@ -1086,7 +1100,9 @@ def get_asset_depr_schedule_doc(asset_name, status, finance_book=None):
 	if not asset_depr_schedule:
 		return
 
-	asset_depr_schedule_doc = frappe.get_doc("Asset Depreciation Schedule", asset_depr_schedule[0].name)
+	asset_depr_schedule_doc = frappe.get_doc(
+		"Asset Depreciation Schedule", asset_depr_schedule[0].name
+	)
 
 	return asset_depr_schedule_doc
 

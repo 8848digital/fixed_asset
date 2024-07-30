@@ -11,7 +11,7 @@ required_apps = ["frappe", "erpnext"]
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/asset/css/asset.css"
-# app_include_js = "/assets/asset/js/asset.js"
+app_include_js = "asset.bundle.js"
 
 # include js, css files in header of web template
 # web_include_css = "/assets/asset/css/asset.css"
@@ -28,7 +28,17 @@ required_apps = ["frappe", "erpnext"]
 # page_js = {"page" : "public/js/file.js"}
 
 # include js in doctype views
-# doctype_js = {"doctype" : "public/js/doctype.js"}
+doctype_js = {
+	"Company": "asset/customizations/company/company.js",
+	"Item": "asset/customizations/item/item.js",
+	"Purchase Receipt": "asset/customizations/purchase_receipt/purchase_receipt.js",
+	"Purchase Invoice": "asset/customizations/purchase_invoice/purchase_invoice.js",
+	"Serial and Batch Bundle": "asset/customizations/serial_and_batch_bundle/serial_and_batch_bundle.js",
+	"Sales Invoice": "asset/customizations/sales_invoice/sales_invoice.js",
+	"Journal Entry": "asset/customizations/journal_entry/journal_entry.js",
+	"Product Bundle": "asset/customizations/product_bundle/product_bundle.js",
+	"BOM": "asset/customizations/bom/bom.js",
+}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -68,12 +78,13 @@ required_apps = ["frappe", "erpnext"]
 # ------------
 
 # before_install = "asset.install.before_install"
-# after_install = "asset.install.after_install"
+after_install = "asset.install.after_install"
+after_migrate = "asset.setup.after_migrate"
 
 # Uninstallation
 # ------------
 
-# before_uninstall = "asset.uninstall.before_uninstall"
+before_uninstall = "asset.uninstall.before_uninstall"
 # after_uninstall = "asset.uninstall.after_uninstall"
 
 # Integration Setup
@@ -114,21 +125,42 @@ required_apps = ["frappe", "erpnext"]
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt.AssetPurchaseReceipt",
+	"Purchase Invoice": "asset.asset.customizations.purchase_invoice.purchase_invoice.AssetPurchaseInvoice",
+	"Landed Cost Voucher": "asset.asset.customizations.landed_cost_voucher.landed_cost_voucher.AssetLandedCostVoucher",
+	"Serial and Batch Bundle": "asset.asset.customizations.serial_and_batch_bundle.serial_and_batch_bundle.AssetSerialandBatchBundle",
+}
 
 # Document Events
 # ---------------
 # Hook on document methods and events
+period_closing_doctypes = ["Asset", "Asset Capitalization", "Asset Repair"]
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+	tuple(period_closing_doctypes): {
+		"validate": "asset.asset.customizations.accounting_period.accounting_period.validate_accounting_period_on_doc_save",
+	},
+	"Company": {
+		"on_update": "asset.asset.customizations.company.company.on_update",
+	},
+	"Item": {
+		"validate": "asset.asset.customizations.item.item.validate",
+		"onload": "asset.asset.customizations.item.item.onload",
+	},
+	"Purchase Receipt": {
+		"validate": "asset.asset.customizations.purchase_receipt.purchase_receipt.validate"
+	},
+	"Journal Entry": {
+		"on_submit": "asset.asset.customizations.journal_entry.journal_entry.on_submit",
+		"on_cancel": "asset.asset.customizations.journal_entry.journal_entry.on_cancel",
+	},
+	"Sales Invoice": {"validate": "asset.asset.customizations.sales_invoice.sales_invoice.validate"},
+	"Product Bundle": {
+		"validate": "asset.asset.customizations.product_bundle.product_bundle.validate"
+	},
+	"GL Entry": {"validate": "asset.asset.customizations.gl_entry.gl_entry.validate"},
+}
 
 # Scheduled Tasks
 # ---------------
@@ -140,7 +172,7 @@ scheduler_events = {
 	"daily": [
 		"asset.asset.doctype.asset.asset.update_maintenance_status",
 		"asset.asset.doctype.asset.asset.make_post_gl_entry",
-        "asset.asset.doctype.asset_maintenance_log.asset_maintenance_log.update_asset_maintenance_log_status",
+		"asset.asset.doctype.asset_maintenance_log.asset_maintenance_log.update_asset_maintenance_log_status",
 	],
 	# "hourly": [
 	# 	"asset.tasks.hourly"
@@ -148,12 +180,12 @@ scheduler_events = {
 	# "weekly": [
 	# 	"asset.tasks.weekly"
 	# ],
-    "daily_long": [
+	"daily_long": [
 		"asset.asset.doctype.asset.depreciation.post_depreciation_entries",
 	],
 	# "monthly": [
 	# 	"asset.tasks.monthly"
-	# ], 
+	# ],
 }
 
 # Testing
@@ -164,16 +196,23 @@ scheduler_events = {
 # Overriding Methods
 # ------------------------------
 #
-# override_whitelisted_methods = {
-# 	"frappe.desk.doctype.event.event.get_events": "asset.event.get_events"
-# }
+override_whitelisted_methods = {
+	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_receipt": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_receipt",
+	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_invoice",
+	"erpnext.buying.doctype.purchase_order.purchase_order.make_purchase_invoice_from_portal": "asset.asset.customizations.purchase_order.purchase_order.make_purchase_invoice_from_portal",
+	"erpnext.accounts.doctype.purchase_invoice.purchase_invoice.make_purchase_receipt": "asset.asset.customizations.purchase_invoice.purchase_invoice.make_purchase_receipt",
+	"erpnext.selling.page.point_of_sale.point_of_sale.get_items": "asset.asset.customizations.point_of_sale.point_of_sale.get_items",
+	"erpnext.stock.doctype.material_request.material_request.make_purchase_order": "asset.asset.customizations.material_request.material_request.make_purchase_order",
+	"erpnext.stock.get_item_details.get_item_details": "asset.asset.customizations.get_item_details.get_item_details.get_item_details",
+}
 #
 # each overriding function accepts a `data` argument;
 # generated from the base implementation of the doctype dashboard,
 # along with any modifications made in other Frappe apps
-# override_doctype_dashboards = {
-# 	"Task": "asset.task.get_dashboard_data"
-# }
+override_doctype_dashboards = {
+	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt_dashboard.get_dashboard_for_purchase_receipt",
+	"Purchase Invoice": "asset.asset.customizations.purchase_invoice.purchase_invoice_dashboard.get_dashboard_for_purchase_invoice",
+}
 
 # exempt linked doctypes from being automatically cancelled
 #
@@ -231,12 +270,6 @@ scheduler_events = {
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-
-period_closing_doctypes = [
-	"Asset",
-	"Asset Capitalization",
-	"Asset Repair",
-]
 
 accounting_dimension_doctypes = [
 	"Asset",

@@ -156,6 +156,11 @@ frappe.ui.form.on("Asset Repair Consumed Item", {
 
 	consumed_quantity: function (frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
-		frappe.model.set_value(cdt, cdn, "total_value", row.consumed_quantity * row.valuation_rate);
+		frappe.model.set_value(
+			cdt,
+			cdn,
+			"total_value",
+			row.consumed_quantity * row.valuation_rate
+		);
 	},
 });

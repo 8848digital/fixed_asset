@@ -1,0 +1,39 @@
+{
+    "Purchase Invoice Item": [
+        {
+            "doctype": "Purchase Invoice Item",
+            "fieldname": "is_stock_item",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1"
+        },
+        {
+            "doctype": "Purchase Invoice Item",
+            "fieldname": "serial_no",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1"
+        },
+        {
+            "doctype": "Purchase Invoice Item",
+            "fieldname": "rejected_serial_no",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1"
+        },
+        {
+            "doctype": "Purchase Invoice Item",
+            "fieldname": "cost_center",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.is_fixed_asset"
+        },
+        {
+            "doctype": "Purchase Invoice Item",
+            "fieldname": "section_break_rqbe",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.is_fixed_asset && doc.use_serial_batch_fields === 1 && parent.update_stock === 1"
+        }
+    ]
+}

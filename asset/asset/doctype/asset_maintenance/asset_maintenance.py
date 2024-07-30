@@ -18,7 +18,9 @@ class AssetMaintenance(Document):
 	if TYPE_CHECKING:
 		from frappe.types import DF
 
-		from asset.asset.doctype.asset_maintenance_task.asset_maintenance_task import AssetMaintenanceTask
+		from asset.asset.doctype.asset_maintenance_task.asset_maintenance_task import (
+			AssetMaintenanceTask,
+		)
 
 		asset_category: DF.ReadOnly | None
 		asset_maintenance_tasks: DF.Table[AssetMaintenanceTask]
@@ -95,7 +97,9 @@ def calculate_next_due_date(
 	if not start_date and not last_completion_date:
 		start_date = frappe.utils.now()
 
-	if last_completion_date and ((start_date and last_completion_date > start_date) or not start_date):
+	if last_completion_date and (
+		(start_date and last_completion_date > start_date) or not start_date
+	):
 		start_date = last_completion_date
 	if periodicity == "Daily":
 		next_due_date = add_days(start_date, 1)

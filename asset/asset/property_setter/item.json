@@ -1,0 +1,60 @@
+{
+    "Item": [
+        {
+            "doctype": "Item",
+            "fieldname": "is_stock_item",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.is_fixed_asset"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "include_item_in_manufacturing",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.is_fixed_asset"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "variants_section",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.is_fixed_asset"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "supplier_details",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.is_fixed_asset"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "customer_details",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.is_fixed_asset"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "over_delivery_receipt_allowance",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.__islocal && !doc.is_fixed_asset"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "over_billing_allowance",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.__islocal && !doc.is_fixed_asset"
+        },
+        {
+            "doctype": "Item",
+            "fieldname": "accounting",
+            "property": "depends_on",
+            "property_type": "Code",
+            "value": "eval:!doc.is_fixed_asset"
+        }
+    ]
+}

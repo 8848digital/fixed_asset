@@ -4,6 +4,10 @@
 import unittest
 
 import frappe
+from erpnext.stock.doctype.item.test_item import create_item
+from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
+	make_serial_batch_bundle,
+)
 from frappe.utils import cint, flt, getdate, now_datetime
 
 from asset.asset.doctype.asset.depreciation import post_depreciation_entries
@@ -14,10 +18,6 @@ from asset.asset.doctype.asset.test_asset import (
 )
 from asset.asset.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,
-)
-from erpnext.stock.doctype.item.test_item import create_item
-from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
-	make_serial_batch_bundle,
 )
 
 
@@ -365,7 +365,9 @@ class TestAssetCapitalization(unittest.TestCase):
 			for d in depr_schedule_of_consumed_asset
 			if getdate(d.schedule_date) == getdate(capitalization_date)
 		]
-		self.assertTrue(consumed_depreciation_schedule and consumed_depreciation_schedule[0].journal_entry)
+		self.assertTrue(
+			consumed_depreciation_schedule and consumed_depreciation_schedule[0].journal_entry
+		)
 		self.assertEqual(
 			consumed_depreciation_schedule[0].depreciation_amount, depreciation_before_disposal_amount
 		)
@@ -388,9 +390,15 @@ class TestAssetCapitalization(unittest.TestCase):
 
 
 def create_asset_capitalization_data():
-	create_item("Capitalization Target Stock Item", is_stock_item=1, is_fixed_asset=0, is_purchase_item=0)
-	create_item("Capitalization Source Stock Item", is_stock_item=1, is_fixed_asset=0, is_purchase_item=0)
-	create_item("Capitalization Source Service Item", is_stock_item=0, is_fixed_asset=0, is_purchase_item=0)
+	create_item(
+		"Capitalization Target Stock Item", is_stock_item=1, is_fixed_asset=0, is_purchase_item=0
+	)
+	create_item(
+		"Capitalization Source Stock Item", is_stock_item=1, is_fixed_asset=0, is_purchase_item=0
+	)
+	create_item(
+		"Capitalization Source Service Item", is_stock_item=0, is_fixed_asset=0, is_purchase_item=0
+	)
 
 
 def create_asset_capitalization(**args):

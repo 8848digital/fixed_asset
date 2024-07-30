@@ -3,13 +3,13 @@
 
 
 import frappe
+from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
+	get_checks_for_pl_and_bs_accounts,
+)
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import flt, formatdate, get_link_to_form, getdate
 
-from erpnext.accounts.doctype.accounting_dimension.accounting_dimension import (
-	get_checks_for_pl_and_bs_accounts,
-)
 from asset.asset.doctype.asset.asset import get_asset_value_after_depreciation
 from asset.asset.doctype.asset.depreciation import get_depreciation_accounts
 from asset.asset.doctype.asset_activity.asset_activity import add_asset_activity

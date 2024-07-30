@@ -32,13 +32,13 @@ repos:
         # Ignore any files that might contain jinja / bundles
         exclude: |
             (?x)^(
-                ivend_pos/public/dist/.*|
+                asset/public/dist/.*|
                 .*node_modules.*|
                 .*boilerplate.*|
-                ivend_pos/www/website_script.js|
-                ivend_pos/templates/includes/.*|
-                ivend_pos/public/js/lib/.*|
-                ivend_pos/website/doctype/website_theme/website_theme_template.scss
+                asset/www/website_script.js|
+                asset/templates/includes/.*|
+                asset/public/js/lib/.*|
+                asset/website/doctype/website_theme/website_theme_template.scss
             )$
 
 
@@ -51,13 +51,13 @@ repos:
         # Ignore any files that might contain jinja / bundles
         exclude: |
             (?x)^(
-                ivend_pos/public/dist/.*|
+                asset/public/dist/.*|
                 cypress/.*|
                 .*node_modules.*|
                 .*boilerplate.*|
-                ivend_pos/www/website_script.js|
-                ivend_pos/templates/includes/.*|
-                ivend_pos/public/js/lib/.*
+                asset/www/website_script.js|
+                asset/templates/includes/.*|
+                asset/public/js/lib/.*
             )$
 
   - repo: https://github.com/PyCQA/isort

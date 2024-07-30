@@ -1,19 +1,19 @@
 # Copyright (c) 2017, Frappe Technologies Pvt. Ltd. and contributors
 # For license information, please see license.txt
 
+import erpnext
 import frappe
+from erpnext.accounts.general_ledger import make_gl_entries
+from erpnext.controllers.accounts_controller import AccountsController
 from frappe import _
 from frappe.utils import add_months, cint, flt, get_link_to_form, getdate, time_diff_in_hours
 
-import erpnext
-from erpnext.accounts.general_ledger import make_gl_entries
 from asset.asset.doctype.asset.asset import get_asset_account
 from asset.asset.doctype.asset_activity.asset_activity import add_asset_activity
 from asset.asset.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_depr_schedule,
 	make_new_active_asset_depr_schedules_and_cancel_current_ones,
 )
-from erpnext.controllers.accounts_controller import AccountsController
 
 
 class AssetRepair(AccountsController):
@@ -147,9 +147,7 @@ class AssetRepair(AccountsController):
 				if self.asset_doc.calculate_depreciation and self.increase_in_asset_life:
 					self.revert_depreciation_schedule_on_cancellation()
 
-				notes = _(
-					"This schedule was created when Asset {0}'s Asset Repair {1} was cancelled."
-				).format(
+				notes = _("This schedule was created when Asset {0}'s Asset Repair {1} was cancelled.").format(
 					get_link_to_form(self.asset_doc.doctype, self.asset_doc.name),
 					get_link_to_form(self.doctype, self.name),
 				)
@@ -173,7 +171,9 @@ class AssetRepair(AccountsController):
 
 	def check_for_stock_items_and_warehouse(self):
 		if not self.get("stock_items"):
-			frappe.throw(_("Please enter Stock Items consumed during the Repair."), title=_("Missing Items"))
+			frappe.throw(
+				_("Please enter Stock Items consumed during the Repair."), title=_("Missing Items")
+			)
 
 	def increase_asset_value(self):
 		total_value_of_stock_consumed = self.get_total_value_of_stock_consumed()
@@ -253,7 +253,9 @@ class AssetRepair(AccountsController):
 	def get_gl_entries(self):
 		gl_entries = []
 
-		fixed_asset_account = get_asset_account("fixed_asset_account", asset=self.asset, company=self.company)
+		fixed_asset_account = get_asset_account(
+			"fixed_asset_account", asset=self.asset, company=self.company
+		)
 		self.get_gl_entries_for_repair_cost(gl_entries, fixed_asset_account)
 		self.get_gl_entries_for_consumed_items(gl_entries, fixed_asset_account)
 

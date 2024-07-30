@@ -4,11 +4,11 @@
 import unittest
 
 import frappe
+from erpnext.setup.doctype.employee.test_employee import make_employee
+from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 from frappe.utils import now
 
 from asset.asset.doctype.asset.test_asset import create_asset_data
-from erpnext.setup.doctype.employee.test_employee import make_employee
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 
 
 class TestAssetMovement(unittest.TestCase):
@@ -20,7 +20,9 @@ class TestAssetMovement(unittest.TestCase):
 		make_location()
 
 	def test_movement(self):
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location"
+		)
 
 		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
 		asset = frappe.get_doc("Asset", asset_name)
@@ -103,7 +105,9 @@ class TestAssetMovement(unittest.TestCase):
 		self.assertEqual(frappe.db.get_value("Asset", asset.name, "location"), "Test Location")
 
 	def test_last_movement_cancellation(self):
-		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location")
+		pr = make_purchase_receipt(
+			item_code="Macbook Pro", qty=1, rate=100000.0, location="Test Location"
+		)
 
 		asset_name = frappe.db.get_value("Asset", {"purchase_receipt": pr.name}, "name")
 		asset = frappe.get_doc("Asset", asset_name)
@@ -175,4 +179,6 @@ def create_asset_movement(**args):
 def make_location():
 	for location in ["Pune", "Mumbai", "Nagpur"]:
 		if not frappe.db.exists("Location", location):
-			frappe.get_doc({"doctype": "Location", "location_name": location}).insert(ignore_permissions=True)
+			frappe.get_doc({"doctype": "Location", "location_name": location}).insert(
+				ignore_permissions=True
+			)
