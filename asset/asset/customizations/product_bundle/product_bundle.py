@@ -1,7 +1,8 @@
 import frappe
 from frappe import _
 
-def validate(self, method = None):
+
+def validate(self, method=None):
 	validate_main_item(self)
 
 
@@ -19,7 +20,9 @@ def get_new_item_code(doctype, txt, searchfield, start, page_len, filters):
 	query = (
 		frappe.qb.from_(item)
 		.select(item.item_code, item.item_name)
-		.where((item.is_stock_item == 0) & (item.is_fixed_asset == 0) & (item[searchfield].like(f"%{txt}%")))
+		.where(
+			(item.is_stock_item == 0) & (item.is_fixed_asset == 0) & (item[searchfield].like(f"%{txt}%"))
+		)
 		.limit(page_len)
 		.offset(start)
 	)

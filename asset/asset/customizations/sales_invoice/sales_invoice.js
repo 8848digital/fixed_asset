@@ -1,17 +1,22 @@
 frappe.ui.form.on("Sales Invoice", {
-    setup(frm, cdt, cdn){
-        frm.set_query("asset", "items", function (doc, cdt, cdn) {
-            var d = locals[cdt][cdn];
-            return {
-                filters: [
-                    ["Asset", "item_code", "=", d.item_code],
-                    ["Asset", "docstatus", "=", 1],
-                    ["Asset", "status", "in", ["Submitted", "Partially Depreciated", "Fully Depreciated"]],
-                    ["Asset", "company", "=", doc.company],
-                ],
-            };
-        });
-    }
+	setup(frm, cdt, cdn) {
+		frm.set_query("asset", "items", function (doc, cdt, cdn) {
+			var d = locals[cdt][cdn];
+			return {
+				filters: [
+					["Asset", "item_code", "=", d.item_code],
+					["Asset", "docstatus", "=", 1],
+					[
+						"Asset",
+						"status",
+						"in",
+						["Submitted", "Partially Depreciated", "Fully Depreciated"],
+					],
+					["Asset", "company", "=", doc.company],
+				],
+			};
+		});
+	},
 });
 
 frappe.ui.form.on("Sales Invoice Item", {
@@ -29,5 +34,5 @@ frappe.ui.form.on("Sales Invoice Item", {
 				},
 			});
 		}
-	}
+	},
 });

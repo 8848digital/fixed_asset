@@ -2,7 +2,6 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-		
 
 def validate_cwip_accounts(doc):
 	"""Validate that CWIP account are not used in Journal Entry"""
@@ -21,7 +20,7 @@ def validate_cwip_accounts(doc):
 			where account_type = 'Capital Work in Progress' and is_group=0"""
 			)
 		]
-		
+
 		if doc.account in cwip_accounts:
 			frappe.throw(
 				_(

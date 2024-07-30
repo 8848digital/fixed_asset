@@ -11,12 +11,12 @@ from asset.asset.customizations.journal_entry.doc_events.update_booked_depreciat
 )
 
 
-def on_submit(self, event):
+def on_submit(self, method=None):
 	update_asset_value(self)
 	update_booked_depreciation(self)
 
 
-def on_cancel(self, event):
+def on_cancel(self, method=None):
 	unlink_asset_reference(self)
 	unlink_asset_adjustment_entry(self)
 	update_booked_depreciation(self, 1)

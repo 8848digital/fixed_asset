@@ -16,6 +16,6 @@ class overrideSalesInvoice(SalesInvoice):
 		asset_make_item_gl_entries(self, gl_entries)
 
 
-def validate(self, event):
+def validate(self, method=None):
 	validate_fixed_asset(self)
 	set_income_account_for_fixed_assets(self)

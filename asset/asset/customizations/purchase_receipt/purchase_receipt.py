@@ -27,16 +27,16 @@ from asset.asset.customizations.purchase_receipt.override.update_assets import a
 
 class AssetPurchaseReceipt(PurchaseReceipt):
 	def make_item_gl_entries(self, gl_entries, warehouse_account=None):
-		asset_make_item_gl_entries(self, gl_entries, warehouse_account=None)
+		asset_make_item_gl_entries(self, gl_entries, warehouse_account)
 
 	def update_assets(self, item, valuation_rate):
 		asset_update_assets(self, item, valuation_rate)
 
 
-def validate(self, event):
+def validate(self, method=None):
 	validate_cwip_accounts(self)
 
 
 @frappe.whitelist()
 def make_purchase_invoice(source_name, target_doc=None, args=None):
-	return asset_make_purchase_invoice(source_name, target_doc=None, args=None)
+	return asset_make_purchase_invoice(source_name, target_doc, args)

@@ -16,7 +16,7 @@ from asset.asset.doctype.asset.asset import is_cwip_accounting_enabled
 
 class AssetPurchaseInvoice(PurchaseInvoice):
 	def set_expense_account(self, for_validate=False):
-		asset_set_expense_account(self, for_validate=False)
+		asset_set_expense_account(self, for_validate)
 
 	def make_item_gl_entries(self, gl_entries):
 		asset_make_item_gl_entries(self, gl_entries)
@@ -36,4 +36,4 @@ class AssetPurchaseInvoice(PurchaseInvoice):
 
 @frappe.whitelist()
 def make_purchase_receipt(source_name, target_doc=None):
-	return asset_make_purchase_receipt(source_name, target_doc=None)
+	return asset_make_purchase_receipt(source_name, target_doc)

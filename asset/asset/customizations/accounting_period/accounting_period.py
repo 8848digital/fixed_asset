@@ -1,5 +1,6 @@
 from erpnext.accounts.doctype.accounting_period.accounting_period import validate_accounting_period
 
+
 def validate_accounting_period_on_doc_save(doc, method=None):
 	if doc.doctype == "Bank Clearance":
 		return
@@ -12,5 +13,5 @@ def validate_accounting_period_on_doc_save(doc, method=None):
 		date = doc.completion_date
 	else:
 		date = doc.posting_date
-		
+
 	validate_accounting_period(doc, date)

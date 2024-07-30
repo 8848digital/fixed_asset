@@ -4,6 +4,6 @@ frappe.ui.form.on("Journal Entry", {
 			"Asset",
 			"Asset Movement",
 			"Asset Depreciation Schedule"
-        );
+		);
 	},
 });

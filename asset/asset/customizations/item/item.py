@@ -7,12 +7,12 @@ from asset.asset.customizations.item.doc_events.validate_asset_item import (
 )
 
 
-def validate(self, event):
+def validate(self, method=None):
 	validate_item_type(self)
 	validate_fixed_asset(self)
 
 
-def onload(self, event):
+def onload(self, method=None):
 	self.set_onload("asset_naming_series", get_asset_naming_series())
 
 

@@ -14,6 +14,5 @@
       url: docsUrl + "user/manual/en/asset-category"
     }
   ];
-  console.log("====in public");
 })();
-//# sourceMappingURL=asset.bundle.UNBCJDHR.js.map
+//# sourceMappingURL=asset.bundle.NLA55ALH.js.map

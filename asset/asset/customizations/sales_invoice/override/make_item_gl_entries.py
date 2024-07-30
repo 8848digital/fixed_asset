@@ -1,10 +1,9 @@
 import erpnext
 import frappe
-from erpnext.accounts.doctype.sales_invoice.sales_invoice import get_gl_entries
+from erpnext.accounts.doctype.sales_invoice.sales_invoice import SalesInvoice
 from erpnext.accounts.utils import get_account_currency
 from frappe import _
 from frappe.utils import cint, flt, get_link_to_form
-from erpnext.accounts.doctype.sales_invoice.sales_invoice import SalesInvoice
 
 from asset.asset.doctype.asset.depreciation import (
 	depreciate_asset,

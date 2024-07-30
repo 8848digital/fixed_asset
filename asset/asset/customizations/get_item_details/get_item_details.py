@@ -6,15 +6,16 @@ from erpnext.stock.get_item_details import (
 	_get_item_details,
 	get_basic_details,
 	get_default_expense_account,
-	process_args
+	process_args,
 )
+
 
 @frappe.whitelist()
 def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=True):
 	args = process_args(args)
 	item = frappe.get_cached_doc("Item", args.item_code)
 	out = get_basic_details(args, item, overwrite_warehouse)
-	
+
 	expense_account = None
 
 	if item.is_fixed_asset:
@@ -42,8 +43,11 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	item_group_defaults = get_item_group_defaults(item.name, args.company)
 	brand_defaults = get_brand_defaults(item.name, args.company)
 
-	out.update({
-		"expense_account": expense_account or get_default_expense_account(args, item_defaults, item_group_defaults, brand_defaults),
-		"is_fixed_asset": item.is_fixed_asset
-	})
-	return _get_item_details(args, out, doc=None, for_validate=False, overwrite_warehouse=True)
+	out.update(
+		{
+			"expense_account": expense_account
+			or get_default_expense_account(args, item_defaults, item_group_defaults, brand_defaults),
+			"is_fixed_asset": item.is_fixed_asset,
+		}
+	)
+	return _get_item_details(args, out, doc, for_validate, overwrite_warehouse)

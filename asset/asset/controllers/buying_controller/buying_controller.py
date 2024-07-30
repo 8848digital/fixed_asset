@@ -1,23 +1,21 @@
 import frappe
+from erpnext.buying.utils import update_last_purchase_rate, validate_for_items
+from erpnext.controllers.buying_controller import BuyingController
 from frappe import _
 
-from erpnext.buying.utils import update_last_purchase_rate, validate_for_items
-from erpnext.controllers.buying_controller import (
-    BuyingController
-)
-
-from asset.asset.controllers.buying_controller.override.validate_asset import (
-    validate_asset_return, 
-    validate_stock_or_nonstock_items,
-	update_valuation_rate
-)
 from asset.asset.controllers.buying_controller.override.asset_cancel import (
+	delete_linked_asset,
 	update_fixed_asset,
-	delete_linked_asset
 )
 from asset.asset.controllers.buying_controller.override.process_fixed_asset import (
-	process_fixed_asset
+	process_fixed_asset,
 )
+from asset.asset.controllers.buying_controller.override.validate_asset import (
+	update_valuation_rate,
+	validate_asset_return,
+	validate_stock_or_nonstock_items,
+)
+
 
 class AssetBuyingController(BuyingController):
 	def validate(self):
@@ -40,7 +38,9 @@ class AssetBuyingController(BuyingController):
 		if self.doctype == "Purchase Invoice":
 			self.validate_purchase_receipt_if_update_stock()
 
-		if self.doctype == "Purchase Receipt" or (self.doctype == "Purchase Invoice" and self.update_stock):
+		if self.doctype == "Purchase Receipt" or (
+			self.doctype == "Purchase Invoice" and self.update_stock
+		):
 			# self.validate_purchase_return()
 			self.validate_rejected_warehouse()
 			self.validate_accepted_rejected_qty()
@@ -55,8 +55,6 @@ class AssetBuyingController(BuyingController):
 		if self.doctype in ("Purchase Receipt", "Purchase Invoice"):
 			update_valuation_rate(self)
 			self.set_serial_and_batch_bundle()
-
-	
 
 	def on_submit(self):
 		if self.get("is_return"):
@@ -85,7 +83,3 @@ class AssetBuyingController(BuyingController):
 
 			delete_linked_asset(self)
 			update_fixed_asset(self, field, delete_asset=True)
-
-	
-
-

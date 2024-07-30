@@ -1,11 +1,14 @@
 from erpnext.stock.serial_batch_bundle import SerialBatchBundle
 
+
 class AssetSerialBatchBundle(SerialBatchBundle):
 	@property
 	def child_doctype(self):
 		child_doctype = self.sle.voucher_type + " Item"
 
-		if self.sle.voucher_type == "Subcontracting Receipt" and self.sle.dependant_sle_voucher_detail_no:
+		if (
+			self.sle.voucher_type == "Subcontracting Receipt" and self.sle.dependant_sle_voucher_detail_no
+		):
 			child_doctype = "Subcontracting Receipt Supplied Item"
 
 		if self.sle.voucher_type == "Stock Entry":
