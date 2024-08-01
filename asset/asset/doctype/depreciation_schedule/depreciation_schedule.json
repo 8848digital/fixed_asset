@@ -9,6 +9,7 @@
  "field_order": [
   "schedule_date",
   "depreciation_amount",
+  "finance_book_id",
   "column_break_3",
   "accumulated_depreciation_amount",
   "journal_entry",
@@ -64,11 +65,19 @@
    "fieldtype": "Link",
    "label": "Shift",
    "options": "Asset Shift Factor"
+  },
+  {
+   "fieldname": "finance_book_id",
+   "fieldtype": "Int",
+   "hidden": 1,
+   "label": "Finance Book Id",
+   "print_hide": 1,
+   "read_only": 1
   }
  ],
  "istable": 1,
  "links": [],
- "modified": "2024-03-27 13:06:51.227001",
+ "modified": "2024-08-01 17:27:38.205287",
  "modified_by": "Administrator",
  "module": "Asset",
  "name": "Depreciation Schedule",

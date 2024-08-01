@@ -5,7 +5,7 @@ from asset.setup import before_uninstall as remove_custom_fields
 
 def before_uninstall():
 	try:
-		print("Removing customizations created by the Frappe Asset app...")
+		print("Removing customizations created by the Frappe Fixed Asset app...")
 		remove_custom_fields()
 
 	except Exception as e:

@@ -14,6 +14,7 @@ def after_migrate():
 def after_install():
 	create_custom_fields()
 	create_property_setter()
+	run_post_install_patches()
 
 
 def before_uninstall():
@@ -51,3 +52,35 @@ def delete_custom_fields():
 	cfs = frappe.db.get_values("Custom Field", filters={"module": ["in", module_list]})
 	for cf in cfs:
 		frappe.delete_doc("Custom Field", cf[0])
+
+
+def get_post_install_patches():
+	return (
+		"erpnext.patches.v11_0.make_asset_finance_book_against_old_entries",
+		"erpnext.patches.v11_0.make_location_from_warehouse",
+		"erpnext.patches.v11_0.rename_asset_adjustment_doctype",
+		"erpnext.patches.v11_0.merge_land_unit_with_location",
+		"erpnext.patches.v12_0.set_cwip_and_delete_asset_settings",
+		"erpnext.patches.v13_0.create_accounting_dimensions_for_asset_repair",
+		"erpnext.patches.v13_0.update_asset_quantity_field",
+		"erpnext.patches.v14_0.create_accounting_dimensions_for_asset_capitalization",
+		"erpnext.patches.v14_0.update_total_asset_cost_field",
+		"erpnext.patches.v14_0.update_zero_asset_quantity_field",
+	)
+
+
+def run_post_install_patches():
+	print("\nPatching Existing Data...")
+
+	POST_INSTALL_PATCHES = get_post_install_patches()
+	frappe.flags.in_patch = True
+
+	try:
+		for patch in POST_INSTALL_PATCHES:
+			patch_name = patch.split(".")[-1]
+			if not patch_name:
+				continue
+
+			frappe.get_attr(f"asset.patches.post_install.{patch_name}.execute")()
+	finally:
+		frappe.flags.in_patch = False
