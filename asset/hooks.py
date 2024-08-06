@@ -212,6 +212,7 @@ override_whitelisted_methods = {
 override_doctype_dashboards = {
 	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt_dashboard.get_dashboard_for_purchase_receipt",
 	"Purchase Invoice": "asset.asset.customizations.purchase_invoice.purchase_invoice_dashboard.get_dashboard_for_purchase_invoice",
+	"Finance Book": "asset.asset.customizations.finance_book.finance_book_dashboard.get_dashboard_for_finance_book",
 }
 
 # exempt linked doctypes from being automatically cancelled
