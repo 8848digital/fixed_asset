@@ -5,11 +5,14 @@ import unittest
 
 import frappe
 from erpnext.accounts.doctype.journal_entry.test_journal_entry import make_journal_entry
-from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
+from erpnext.stock.doctype.item.test_item import make_item
 from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
 	make_purchase_invoice as make_invoice,
 )
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
+from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import get_items, get_taxes
+from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
+	make_serial_batch_bundle,
+)
 from frappe.utils import (
 	add_days,
 	add_months,
@@ -20,6 +23,7 @@ from frappe.utils import (
 	getdate,
 	is_last_day_of_the_month,
 	nowdate,
+	today,
 )
 
 from asset.asset.doctype.asset.asset import (
@@ -107,6 +111,172 @@ class TestAsset(AssetSetup):
 
 		item.is_stock_item = 1
 		self.assertRaises(frappe.ValidationError, asset.save)
+
+	def test_get_asset_item_details(self):
+		from erpnext.stock.get_item_details import get_item_details
+
+		create_asset_category(0)
+		create_fixed_asset_item()
+
+		details = get_item_details(
+			{
+				"item_code": "Macbook Pro",
+				"company": "_Test Company",
+				"currency": "INR",
+				"doctype": "Purchase Receipt",
+			}
+		)
+		self.assertEqual(details.get("expense_account"), "_Test Fixed Asset - _TC")
+
+		frappe.db.set_value("Asset Category", "Computers", "enable_cwip_accounting", "1")
+		details = get_item_details(
+			{
+				"item_code": "Macbook Pro",
+				"company": "_Test Company",
+				"currency": "INR",
+				"doctype": "Purchase Receipt",
+			}
+		)
+		self.assertEqual(details.get("expense_account"), "CWIP Account - _TC")
+
+	def test_auto_asset_creation(self):
+		asset_item = "Test Asset Item"
+
+		if not frappe.db.exists("Item", asset_item):
+			asset_category = frappe.get_all("Asset Category")
+
+			if asset_category:
+				asset_category = asset_category[0].name
+
+			if not asset_category:
+				doc = frappe.get_doc(
+					{
+						"doctype": "Asset Category",
+						"asset_category_name": "Test Asset Category",
+						"depreciation_method": "Straight Line",
+						"total_number_of_depreciations": 12,
+						"frequency_of_depreciation": 1,
+						"accounts": [
+							{
+								"company_name": "_Test Company",
+								"fixed_asset_account": "_Test Fixed Asset - _TC",
+								"accumulated_depreciation_account": "_Test Accumulated Depreciations - _TC",
+								"depreciation_expense_account": "_Test Depreciations - _TC",
+							}
+						],
+					}
+				).insert()
+
+				asset_category = doc.name
+
+			item_data = make_item(
+				asset_item,
+				{
+					"is_stock_item": 0,
+					"stock_uom": "Box",
+					"is_fixed_asset": 1,
+					"auto_create_assets": 1,
+					"asset_category": asset_category,
+					"asset_naming_series": "ABC.###",
+				},
+			)
+			asset_item = item_data.item_code
+
+		pr = make_purchase_receipt(item_code=asset_item, qty=3)
+		assets = frappe.db.get_all("Asset", filters={"purchase_receipt": pr.name})
+
+		self.assertEqual(len(assets), 3)
+
+		location = frappe.db.get_value("Asset", assets[0].name, "location")
+		self.assertEqual(location, "Test Location")
+
+		pr.cancel()
+
+	def test_purchase_return_with_submitted_asset(self):
+		from erpnext.stock.doctype.purchase_receipt.purchase_receipt import make_purchase_return
+
+		pr = make_purchase_receipt(item_code="Test Asset Item", qty=1)
+
+		asset = frappe.get_doc("Asset", {"purchase_receipt": pr.name})
+		asset.available_for_use_date = frappe.utils.nowdate()
+		asset.gross_purchase_amount = 50.0
+		asset.append(
+			"finance_books",
+			{
+				"expected_value_after_useful_life": 10,
+				"depreciation_method": "Straight Line",
+				"total_number_of_depreciations": 3,
+				"frequency_of_depreciation": 1,
+			},
+		)
+		asset.submit()
+
+		pr_return = make_purchase_return(pr.name)
+		self.assertRaises(frappe.exceptions.ValidationError, pr_return.submit)
+
+		asset.load_from_db()
+		asset.cancel()
+
+		pr_return.submit()
+
+		pr_return.cancel()
+		pr.cancel()
+
+	def test_make_pr_and_pi_from_po(self):
+		from erpnext.buying.doctype.purchase_order.purchase_order import (
+			make_purchase_invoice as make_pi_from_po,
+		)
+		from erpnext.buying.doctype.purchase_order.test_purchase_order import (
+			create_pr_against_po,
+			create_purchase_order,
+		)
+
+		if not frappe.db.exists("Asset Category", "Computers"):
+			create_asset_category()
+
+		item = create_asset_item(
+			item_code="_Test_Item", is_stock_item=0, is_fixed_asset=1, asset_category="Computers"
+		)
+		po = create_purchase_order(item_code=item.item_code)
+		pr = create_pr_against_po(po.name, 10)
+		pi = make_pi_from_po(po.name)
+		pi.insert()
+		pi.submit()
+
+		pr_gl_entries = frappe.db.sql(
+			"""select account, debit, credit
+			from `tabGL Entry` where voucher_type='Purchase Receipt' and voucher_no=%s
+			order by account asc""",
+			pr.name,
+			as_dict=1,
+		)
+
+		pr_expected_values = [
+			["Asset Received But Not Billed - _TC", 0, 5000],
+			["CWIP Account - _TC", 5000, 0],
+		]
+
+		for i, gle in enumerate(pr_gl_entries):
+			self.assertEqual(pr_expected_values[i][0], gle.account)
+			self.assertEqual(pr_expected_values[i][1], gle.debit)
+			self.assertEqual(pr_expected_values[i][2], gle.credit)
+
+		pi_gl_entries = frappe.db.sql(
+			"""select account, debit, credit
+			from `tabGL Entry` where voucher_type='Purchase Invoice' and voucher_no=%s
+			order by account asc""",
+			pi.name,
+			as_dict=1,
+		)
+		pi_expected_values = [
+			["Asset Received But Not Billed - _TC", 5000, 0],
+			["Creditors - _TC", 0, 5000],
+		]
+
+		for i, gle in enumerate(pi_gl_entries):
+			self.assertEqual(pi_expected_values[i][0], gle.account)
+			self.assertEqual(pi_expected_values[i][1], gle.debit)
+			self.assertEqual(pi_expected_values[i][2], gle.credit)
 
 	def test_purchase_asset(self):
 		pr = make_purchase_receipt(
@@ -349,8 +519,6 @@ class TestAsset(AssetSetup):
 		self.assertEqual(frappe.db.get_value("Asset", asset.name, "status"), "Partially Depreciated")
 
 	def test_gle_made_by_asset_sale_for_existing_asset(self):
-		from erpnext.accounts.doctype.sales_invoice.test_sales_invoice import create_sales_invoice
-
 		asset = create_asset(
 			calculate_depreciation=1,
 			available_for_use_date="2020-04-01",
@@ -1654,6 +1822,203 @@ class TestDepreciationBasics(AssetSetup):
 
 		self.assertRaises(frappe.ValidationError, jv.insert)
 
+	def test_gle_made_when_asset_is_returned(self):
+		create_asset_data()
+		asset = create_asset(item_code="Macbook Pro")
+
+		si = create_sales_invoice(item_code="Macbook Pro", asset=asset.name, qty=1, rate=90000)
+		return_si = create_sales_invoice(
+			is_return=1,
+			return_against=si.name,
+			item_code="Macbook Pro",
+			asset=asset.name,
+			qty=-1,
+			rate=90000,
+		)
+
+		disposal_account = frappe.get_cached_value("Company", "_Test Company", "disposal_account")
+
+		# Asset value is 100,000 but it was sold for 90,000, so there should be a loss of 10,000
+		loss_for_si = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_no": si.name, "account": disposal_account},
+			fields=["credit", "debit"],
+		)[0]
+
+		loss_for_return_si = frappe.get_all(
+			"GL Entry",
+			filters={"voucher_no": return_si.name, "account": disposal_account},
+			fields=["credit", "debit"],
+		)[0]
+
+		self.assertEqual(loss_for_si["credit"], loss_for_return_si["debit"])
+		self.assertEqual(loss_for_si["debit"], loss_for_return_si["credit"])
+
+	def test_asset_depreciation_on_sale_with_pro_rata(self):
+		"""
+		Tests if an Asset set to depreciate yearly on June 30, that gets sold on Sept 30, creates an additional depreciation entry on its date of sale.
+		"""
+
+		create_asset_data()
+		asset = create_asset(item_code="Macbook Pro", calculate_depreciation=1, submit=1)
+		post_depreciation_entries(getdate("2021-09-30"))
+
+		create_sales_invoice(
+			item_code="Macbook Pro", asset=asset.name, qty=1, rate=90000, posting_date=getdate("2021-09-30")
+		)
+		asset.load_from_db()
+
+		expected_values = [
+			["2020-06-30", 1366.12, 1366.12],
+			["2021-06-30", 20000.0, 21366.12],
+			["2021-09-30", 5041.1, 26407.22],
+		]
+
+		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
+			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
+			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
+			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
+			self.assertTrue(schedule.journal_entry)
+
+	def test_asset_depreciation_on_sale_without_pro_rata(self):
+		"""
+		Tests if an Asset set to depreciate yearly on Dec 31, that gets sold on Dec 31 after two years, created an additional depreciation entry on its date of sale.
+		"""
+
+		create_asset_data()
+		asset = create_asset(
+			item_code="Macbook Pro",
+			calculate_depreciation=1,
+			available_for_use_date=getdate("2019-12-31"),
+			total_number_of_depreciations=3,
+			expected_value_after_useful_life=10000,
+			depreciation_start_date=getdate("2020-12-31"),
+			submit=1,
+		)
+
+		post_depreciation_entries(getdate("2021-09-30"))
+
+		create_sales_invoice(
+			item_code="Macbook Pro", asset=asset.name, qty=1, rate=90000, posting_date=getdate("2021-12-31")
+		)
+		asset.load_from_db()
+
+		expected_values = [["2020-12-31", 30000, 30000], ["2021-12-31", 30000, 60000]]
+
+		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
+			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
+			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
+			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
+			self.assertTrue(schedule.journal_entry)
+
+	def test_depreciation_on_return_of_sold_asset(self):
+		from erpnext.controllers.sales_and_purchase_return import make_return_doc
+
+		create_asset_data()
+		asset = create_asset(item_code="Macbook Pro", calculate_depreciation=1, submit=1)
+		post_depreciation_entries(getdate("2021-09-30"))
+
+		si = create_sales_invoice(
+			item_code="Macbook Pro", asset=asset.name, qty=1, rate=90000, posting_date=getdate("2021-09-30")
+		)
+		return_si = make_return_doc("Sales Invoice", si.name)
+		return_si.submit()
+		asset.load_from_db()
+
+		expected_values = [
+			["2020-06-30", 1366.12, 1366.12, True],
+			["2021-06-30", 20000.0, 21366.12, True],
+			["2022-06-30", 20000.0, 41366.12, False],
+			["2023-06-30", 20000.0, 61366.12, False],
+			["2024-06-30", 20000.0, 81366.12, False],
+			["2025-06-06", 18633.88, 100000.0, False],
+		]
+
+		for i, schedule in enumerate(get_depr_schedule(asset.name, "Active")):
+			self.assertEqual(getdate(expected_values[i][0]), schedule.schedule_date)
+			self.assertEqual(expected_values[i][1], schedule.depreciation_amount)
+			self.assertEqual(expected_values[i][2], schedule.accumulated_depreciation_amount)
+			self.assertEqual(schedule.journal_entry, schedule.journal_entry)
+
+	def test_do_not_include_manufacturing_and_fixed_items(self):
+		from erpnext.manufacturing.doctype.bom.bom import item_query
+
+		if not frappe.db.exists("Asset Category", "Computers-Test"):
+			doc = frappe.get_doc({"doctype": "Asset Category", "asset_category_name": "Computers-Test"})
+			doc.flags.ignore_mandatory = True
+			doc.insert()
+
+		for item_code, properties in {
+			"_Test RM Item 1 Do Not Include In Manufacture": {
+				"is_stock_item": 1,
+				"include_item_in_manufacturing": 0,
+			},
+			"_Test RM Item 2 Fixed Asset Item": {
+				"is_fixed_asset": 1,
+				"is_stock_item": 0,
+				"asset_category": "Computers-Test",
+			},
+			"_Test RM Item 3 Manufacture Item": {"is_stock_item": 1, "include_item_in_manufacturing": 1},
+		}.items():
+			make_item(item_code, properties)
+
+		data = item_query(
+			"Item",
+			txt="_Test RM Item",
+			searchfield="name",
+			start=0,
+			page_len=20000,
+			filters={"include_item_in_manufacturing": 1, "is_fixed_asset": 0},
+		)
+
+		items = []
+		for row in data:
+			items.append(row[0])
+
+		self.assertTrue("_Test RM Item 1 Do Not Include In Manufacture" not in items)
+		self.assertTrue("_Test RM Item 2 Fixed Asset Item" not in items)
+		self.assertTrue("_Test RM Item 3 Manufacture Item" in items)
+
+	def test_asset_lcv(self):
+		from erpnext.stock.doctype.landed_cost_voucher.test_landed_cost_voucher import (
+			make_landed_cost_voucher,
+		)
+
+		"Check if LCV for an Asset updates the Assets Gross Purchase Amount correctly."
+		frappe.db.set_value(
+			"Company", "_Test Company", "capital_work_in_progress_account", "CWIP Account - _TC"
+		)
+
+		if not frappe.db.exists("Asset Category", "Computers"):
+			create_asset_category()
+
+		if not frappe.db.exists("Item", "Macbook Pro"):
+			create_fixed_asset_item()
+
+		pr = make_purchase_receipt(item_code="Macbook Pro", qty=1, rate=50000)
+
+		# check if draft asset was created
+		assets = frappe.db.get_all("Asset", filters={"purchase_receipt": pr.name})
+		self.assertEqual(len(assets), 1)
+
+		lcv = make_landed_cost_voucher(
+			company=pr.company,
+			receipt_document_type="Purchase Receipt",
+			receipt_document=pr.name,
+			charges=80,
+			expense_account="Expenses Included In Valuation - _TC",
+		)
+
+		lcv.save()
+		lcv.submit()
+
+		# lcv updates amount in draft asset
+		self.assertEqual(frappe.db.get_value("Asset", assets[0].name, "gross_purchase_amount"), 50080)
+
+		# tear down
+		lcv.cancel()
+		pr.cancel()
+
 	def test_multi_currency_asset_pr_creation(self):
 		pr = make_purchase_receipt(
 			item_code="Macbook Pro",
@@ -1758,32 +2123,33 @@ def create_asset(**args):
 
 
 def create_asset_category(enable_cwip=1):
-	asset_category = frappe.new_doc("Asset Category")
-	asset_category.asset_category_name = "Computers"
-	asset_category.total_number_of_depreciations = 3
-	asset_category.frequency_of_depreciation = 3
-	asset_category.enable_cwip_accounting = enable_cwip
-	asset_category.append(
-		"accounts",
-		{
-			"company_name": "_Test Company",
-			"fixed_asset_account": "_Test Fixed Asset - _TC",
-			"accumulated_depreciation_account": "_Test Accumulated Depreciations - _TC",
-			"depreciation_expense_account": "_Test Depreciations - _TC",
-			"capital_work_in_progress_account": "CWIP Account - _TC",
-		},
-	)
-	asset_category.append(
-		"accounts",
-		{
-			"company_name": "_Test Company with perpetual inventory",
-			"fixed_asset_account": "_Test Fixed Asset - TCP1",
-			"accumulated_depreciation_account": "_Test Accumulated Depreciations - TCP1",
-			"depreciation_expense_account": "_Test Depreciations - TCP1",
-		},
-	)
+	if not frappe.db.exists("Asset Category", "Computers"):
+		asset_category = frappe.new_doc("Asset Category")
+		asset_category.asset_category_name = "Computers"
+		asset_category.total_number_of_depreciations = 3
+		asset_category.frequency_of_depreciation = 3
+		asset_category.enable_cwip_accounting = enable_cwip
+		asset_category.append(
+			"accounts",
+			{
+				"company_name": "_Test Company",
+				"fixed_asset_account": "_Test Fixed Asset - _TC",
+				"accumulated_depreciation_account": "_Test Accumulated Depreciations - _TC",
+				"depreciation_expense_account": "_Test Depreciations - _TC",
+				"capital_work_in_progress_account": "CWIP Account - _TC",
+			},
+		)
+		asset_category.append(
+			"accounts",
+			{
+				"company_name": "_Test Company with perpetual inventory",
+				"fixed_asset_account": "_Test Fixed Asset - TCP1",
+				"accumulated_depreciation_account": "_Test Accumulated Depreciations - TCP1",
+				"depreciation_expense_account": "_Test Depreciations - TCP1",
+			},
+		)
 
-	asset_category.insert()
+		asset_category.insert()
 
 
 def create_fixed_asset_item(item_code=None, auto_create_assets=1, is_grouped_asset=0):
@@ -1828,3 +2194,324 @@ def set_depreciation_settings_in_company(company=None):
 
 def enable_cwip_accounting(asset_category, enable=1):
 	frappe.db.set_value("Asset Category", asset_category, "enable_cwip_accounting", enable)
+
+
+def create_asset_item(
+	item_code,
+	is_stock_item=1,
+	valuation_rate=0,
+	stock_uom="Nos",
+	warehouse="_Test Warehouse - _TC",
+	is_customer_provided_item=None,
+	customer=None,
+	is_purchase_item=None,
+	opening_stock=0,
+	is_fixed_asset=0,
+	asset_category=None,
+	buying_cost_center=None,
+	selling_cost_center=None,
+	company="_Test Company",
+):
+	if not frappe.db.exists("Item", item_code):
+		item = frappe.new_doc("Item")
+		item.item_code = item_code
+		item.item_name = item_code
+		item.description = item_code
+		item.item_group = "All Item Groups"
+		item.stock_uom = stock_uom
+		item.is_stock_item = is_stock_item
+		item.is_fixed_asset = is_fixed_asset
+		item.asset_category = asset_category
+		item.opening_stock = opening_stock
+		item.valuation_rate = valuation_rate
+		item.is_purchase_item = is_purchase_item
+		item.is_customer_provided_item = is_customer_provided_item
+		item.customer = customer or ""
+		item.append(
+			"item_defaults",
+			{
+				"default_warehouse": warehouse,
+				"company": company,
+				"selling_cost_center": selling_cost_center,
+				"buying_cost_center": buying_cost_center,
+			},
+		)
+		item.save()
+	else:
+		item = frappe.get_doc("Item", item_code)
+	return item
+
+
+def make_purchase_receipt(**args):
+	if not frappe.db.exists("Location", "Test Location"):
+		frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+
+	frappe.db.set_single_value("Buying Settings", "allow_multiple_items", 1)
+	pr = frappe.new_doc("Purchase Receipt")
+	args = frappe._dict(args)
+	pr.posting_date = args.posting_date or today()
+	if args.posting_time:
+		pr.posting_time = args.posting_time
+	if args.posting_date or args.posting_time:
+		pr.set_posting_time = 1
+	pr.company = args.company or "_Test Company"
+	pr.supplier = args.supplier or "_Test Supplier"
+	pr.is_subcontracted = args.is_subcontracted or 0
+	pr.supplier_warehouse = args.supplier_warehouse or "_Test Warehouse 1 - _TC"
+	pr.currency = args.currency or "INR"
+	pr.is_return = args.is_return
+	pr.return_against = args.return_against
+	pr.apply_putaway_rule = args.apply_putaway_rule
+
+	qty = args.qty if args.qty is not None else 5
+	rejected_qty = args.rejected_qty or 0
+	received_qty = args.received_qty or flt(rejected_qty) + flt(qty)
+
+	item_code = args.item or args.item_code or "_Test Item"
+	uom = args.uom or frappe.db.get_value("Item", item_code, "stock_uom") or "_Test UOM"
+
+	bundle_id = None
+	if not args.use_serial_batch_fields and (args.get("batch_no") or args.get("serial_no")):
+		batches = {}
+		if args.get("batch_no"):
+			batches = frappe._dict({args.batch_no: qty})
+
+		serial_nos = args.get("serial_no") or []
+
+		bundle_id = make_serial_batch_bundle(
+			frappe._dict(
+				{
+					"item_code": item_code,
+					"warehouse": args.warehouse or "_Test Warehouse - _TC",
+					"qty": qty,
+					"batches": batches,
+					"voucher_type": "Purchase Receipt",
+					"serial_nos": serial_nos,
+					"posting_date": args.posting_date or today(),
+					"posting_time": args.posting_time,
+					"do_not_submit": 1,
+				}
+			)
+		).name
+
+	pr.append(
+		"items",
+		{
+			"item_code": item_code,
+			"warehouse": args.warehouse or "_Test Warehouse - _TC",
+			"qty": qty,
+			"received_qty": received_qty,
+			"rejected_qty": rejected_qty,
+			"rejected_warehouse": args.rejected_warehouse or "_Test Rejected Warehouse - _TC"
+			if rejected_qty != 0
+			else "",
+			"rate": args.rate if args.rate is not None else 50,
+			"conversion_factor": args.conversion_factor or 1.0,
+			"stock_qty": flt(qty) * (flt(args.conversion_factor) or 1.0),
+			"serial_and_batch_bundle": bundle_id,
+			"stock_uom": args.stock_uom or "_Test UOM",
+			"uom": uom,
+			"cost_center": args.cost_center
+			or frappe.get_cached_value("Company", pr.company, "cost_center"),
+			"asset_location": args.location or "Test Location",
+			"use_serial_batch_fields": args.use_serial_batch_fields or 0,
+			"serial_no": args.serial_no if args.use_serial_batch_fields else "",
+			"batch_no": args.batch_no if args.use_serial_batch_fields else "",
+		},
+	)
+
+	if args.get_multiple_items:
+		pr.items = []
+
+		company_cost_center = frappe.get_cached_value("Company", pr.company, "cost_center")
+		cost_center = args.cost_center or company_cost_center
+
+		for item in get_items(warehouse=args.warehouse, cost_center=cost_center):
+			pr.append("items", item)
+
+	if args.get_taxes_and_charges:
+		for tax in get_taxes():
+			pr.append("taxes", tax)
+
+	if not args.do_not_save:
+		pr.insert()
+		if not args.do_not_submit:
+			pr.submit()
+		pr.load_from_db()
+
+	return pr
+
+
+def make_purchase_invoice(**args):
+	pi = frappe.new_doc("Purchase Invoice")
+	args = frappe._dict(args)
+	pi.posting_date = args.posting_date or today()
+	if args.posting_time:
+		pi.posting_time = args.posting_time
+	if args.update_stock:
+		pi.update_stock = 1
+	if args.is_paid:
+		pi.is_paid = 1
+
+	if args.cash_bank_account:
+		pi.cash_bank_account = args.cash_bank_account
+
+	pi.company = args.company or "_Test Company"
+	pi.supplier = args.supplier or "_Test Supplier"
+	pi.currency = args.currency or "INR"
+	pi.conversion_rate = args.conversion_rate or 1
+	pi.is_return = args.is_return
+	pi.return_against = args.return_against
+	pi.is_subcontracted = args.is_subcontracted or 0
+	pi.supplier_warehouse = args.supplier_warehouse or "_Test Warehouse 1 - _TC"
+	pi.cost_center = args.parent_cost_center
+
+	bundle_id = None
+	if not args.use_serial_batch_fields and (args.get("batch_no") or args.get("serial_no")):
+		batches = {}
+		qty = args.qty if args.qty is not None else 5
+		item_code = args.item or args.item_code or "_Test Item"
+		if args.get("batch_no"):
+			batches = frappe._dict({args.batch_no: qty})
+
+		serial_nos = args.get("serial_no") or []
+
+		bundle_id = make_serial_batch_bundle(
+			frappe._dict(
+				{
+					"item_code": item_code,
+					"warehouse": args.warehouse or "_Test Warehouse - _TC",
+					"qty": qty,
+					"batches": batches,
+					"voucher_type": "Purchase Invoice",
+					"serial_nos": serial_nos,
+					"type_of_transaction": "Inward",
+					"posting_date": args.posting_date or today(),
+					"posting_time": args.posting_time,
+				}
+			)
+		).name
+
+	pi.append(
+		"items",
+		{
+			"item_code": args.item or args.item_code or "_Test Item",
+			"item_name": args.item_name,
+			"warehouse": args.warehouse or "_Test Warehouse - _TC",
+			"qty": args.qty if args.qty is not None else 5,
+			"received_qty": args.received_qty or 0,
+			"rejected_qty": args.rejected_qty or 0,
+			"rate": args.rate or 50,
+			"price_list_rate": args.price_list_rate or 50,
+			"expense_account": args.expense_account or "_Test Account Cost for Goods Sold - _TC",
+			"discount_account": args.discount_account or None,
+			"discount_amount": args.discount_amount or 0,
+			"conversion_factor": 1.0,
+			"serial_and_batch_bundle": bundle_id,
+			"stock_uom": args.uom or "_Test UOM",
+			"cost_center": args.cost_center or "_Test Cost Center - _TC",
+			"project": args.project,
+			"rejected_warehouse": args.rejected_warehouse or "",
+			"asset_location": args.location or "",
+			"allow_zero_valuation_rate": args.get("allow_zero_valuation_rate") or 0,
+			"use_serial_batch_fields": args.get("use_serial_batch_fields") or 0,
+			"batch_no": args.get("batch_no") if args.get("use_serial_batch_fields") else "",
+			"serial_no": args.get("serial_no") if args.get("use_serial_batch_fields") else "",
+		},
+	)
+
+	if args.get_taxes_and_charges:
+		taxes = get_taxes()
+		for tax in taxes:
+			pi.append("taxes", tax)
+
+	if not args.do_not_save:
+		pi.insert()
+		if not args.do_not_submit:
+			pi.submit()
+	return pi
+
+
+def create_sales_invoice(**args):
+	si = frappe.new_doc("Sales Invoice")
+	args = frappe._dict(args)
+	if args.posting_date:
+		si.set_posting_time = 1
+	si.posting_date = args.posting_date or nowdate()
+
+	si.company = args.company or "_Test Company"
+	si.customer = args.customer or "_Test Customer"
+	si.debit_to = args.debit_to or "Debtors - _TC"
+	si.update_stock = args.update_stock
+	si.is_pos = args.is_pos
+	si.is_return = args.is_return
+	si.return_against = args.return_against
+	si.currency = args.currency or "INR"
+	si.conversion_rate = args.conversion_rate or 1
+	si.naming_series = args.naming_series or "T-SINV-"
+	si.cost_center = args.parent_cost_center
+
+	bundle_id = None
+	if si.update_stock and (args.get("batch_no") or args.get("serial_no")):
+		batches = {}
+		qty = args.qty if args.qty is not None else 1
+		item_code = args.item or args.item_code or "_Test Item"
+		if args.get("batch_no"):
+			batches = frappe._dict({args.batch_no: qty})
+
+		serial_nos = args.get("serial_no") or []
+
+		bundle_id = make_serial_batch_bundle(
+			frappe._dict(
+				{
+					"item_code": item_code,
+					"warehouse": args.warehouse or "_Test Warehouse - _TC",
+					"qty": qty,
+					"batches": batches,
+					"voucher_type": "Sales Invoice",
+					"serial_nos": serial_nos,
+					"type_of_transaction": "Outward" if not args.is_return else "Inward",
+					"posting_date": si.posting_date or today(),
+					"posting_time": si.posting_time,
+					"do_not_submit": True,
+				}
+			)
+		).name
+
+	si.append(
+		"items",
+		{
+			"item_code": args.item or args.item_code or "_Test Item",
+			"item_name": args.item_name or "_Test Item",
+			"description": args.description or "_Test Item",
+			"warehouse": args.warehouse or "_Test Warehouse - _TC",
+			"target_warehouse": args.target_warehouse,
+			"qty": args.qty if args.qty is not None else 1,
+			"uom": args.uom or "Nos",
+			"stock_uom": args.uom or "Nos",
+			"rate": args.rate if args.get("rate") is not None else 100,
+			"price_list_rate": args.price_list_rate if args.get("price_list_rate") is not None else 100,
+			"income_account": args.income_account or "Sales - _TC",
+			"expense_account": args.expense_account or "Cost of Goods Sold - _TC",
+			"discount_account": args.discount_account or None,
+			"discount_amount": args.discount_amount or 0,
+			"asset": args.asset or None,
+			"cost_center": args.cost_center or "_Test Cost Center - _TC",
+			"conversion_factor": args.get("conversion_factor", 1),
+			"incoming_rate": args.incoming_rate or 0,
+			"serial_and_batch_bundle": bundle_id,
+		},
+	)
+
+	if not args.do_not_save:
+		si.insert()
+		if not args.do_not_submit:
+			si.submit()
+		else:
+			si.payment_schedule = []
+
+		si.load_from_db()
+	else:
+		si.payment_schedule = []
+
+	return si

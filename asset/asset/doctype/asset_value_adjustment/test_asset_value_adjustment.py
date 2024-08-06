@@ -4,12 +4,11 @@
 import unittest
 
 import frappe
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 from frappe.utils import add_days, cstr, get_last_day, getdate, nowdate
 
 from asset.asset.doctype.asset.asset import get_asset_value_after_depreciation
 from asset.asset.doctype.asset.depreciation import post_depreciation_entries
-from asset.asset.doctype.asset.test_asset import create_asset_data
+from asset.asset.doctype.asset.test_asset import create_asset_data, make_purchase_receipt
 from asset.asset.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
 	get_asset_depr_schedule_doc,
 )
