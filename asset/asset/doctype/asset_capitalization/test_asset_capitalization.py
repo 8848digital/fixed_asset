@@ -4,7 +4,6 @@
 import unittest
 
 import frappe
-from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
 	make_serial_batch_bundle,
 )
@@ -14,6 +13,7 @@ from asset.asset.doctype.asset.depreciation import post_depreciation_entries
 from asset.asset.doctype.asset.test_asset import (
 	create_asset,
 	create_asset_data,
+	create_asset_item,
 	set_depreciation_settings_in_company,
 )
 from asset.asset.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
@@ -390,13 +390,13 @@ class TestAssetCapitalization(unittest.TestCase):
 
 
 def create_asset_capitalization_data():
-	create_item(
+	create_asset_item(
 		"Capitalization Target Stock Item", is_stock_item=1, is_fixed_asset=0, is_purchase_item=0
 	)
-	create_item(
+	create_asset_item(
 		"Capitalization Source Stock Item", is_stock_item=1, is_fixed_asset=0, is_purchase_item=0
 	)
-	create_item(
+	create_asset_item(
 		"Capitalization Source Service Item", is_stock_item=0, is_fixed_asset=0, is_purchase_item=0
 	)
 

@@ -113,11 +113,13 @@ class TestAsset(AssetSetup):
 		self.assertRaises(frappe.ValidationError, asset.save)
 
 	def test_get_asset_item_details(self):
-		from erpnext.stock.get_item_details import get_item_details
+		from asset.asset.customizations.get_item_details.get_item_details import get_item_details
 
 		create_asset_category(0)
-		create_fixed_asset_item()
+		if not frappe.db.exists("Asset Category", "Computers"):
+			create_asset_category()
 
+		frappe.db.set_value("Asset Category", "Computers", "enable_cwip_accounting", "0")
 		details = get_item_details(
 			{
 				"item_code": "Macbook Pro",

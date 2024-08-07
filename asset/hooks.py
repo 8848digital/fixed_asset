@@ -130,6 +130,7 @@ override_doctype_class = {
 	"Purchase Invoice": "asset.asset.customizations.purchase_invoice.purchase_invoice.AssetPurchaseInvoice",
 	"Landed Cost Voucher": "asset.asset.customizations.landed_cost_voucher.landed_cost_voucher.AssetLandedCostVoucher",
 	"Serial and Batch Bundle": "asset.asset.customizations.serial_and_batch_bundle.serial_and_batch_bundle.AssetSerialandBatchBundle",
+	"Sales Invoice": "asset.asset.customizations.sales_invoice.sales_invoice.overrideSalesInvoice",
 }
 
 # Document Events

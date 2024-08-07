@@ -1,7 +1,8 @@
 import erpnext
 from erpnext.controllers.accounts_controller import AccountsController
 from erpnext.stock.doctype.item.item import get_uom_conv_factor
-from erpnext.stock.get_item_details import get_item_details
+
+from asset.asset.customizations.get_item_details.get_item_details import get_item_details
 
 force_item_fields = (
 	"item_group",
@@ -15,6 +16,7 @@ force_item_fields = (
 	"total_weight",
 	"valuation_rate",
 )
+
 
 class AssetAccountsController(AccountsController):
 	def set_missing_item_details(self, for_validate=False):
@@ -61,15 +63,13 @@ class AssetAccountsController(AccountsController):
 						args["is_subcontracted"] = self.is_subcontracted
 
 					ret = get_item_details(args, self, for_validate=for_validate, overwrite_warehouse=False)
-					
+
 					for fieldname, value in ret.items():
 						if item.meta.get_field(fieldname) and value is not None:
 							if item.get(fieldname) is None or fieldname in force_item_fields:
 								item.set(fieldname, value)
 
-							elif fieldname in ["cost_center", "conversion_factor"] and not item.get(
-								fieldname
-							):
+							elif fieldname in ["cost_center", "conversion_factor"] and not item.get(fieldname):
 								item.set(fieldname, value)
 
 							elif fieldname == "serial_no":
@@ -103,8 +103,7 @@ class AssetAccountsController(AccountsController):
 						"is_fixed_asset"
 					):
 						item.set("is_fixed_asset", ret.get("is_fixed_asset", 0))
-					
-					
+
 					# Double check for cost center
 					# Items add via promotional scheme may not have cost center set
 					if hasattr(item, "cost_center") and not item.get("cost_center"):
