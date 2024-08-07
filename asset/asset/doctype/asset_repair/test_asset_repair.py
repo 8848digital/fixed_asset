@@ -4,7 +4,6 @@
 import unittest
 
 import frappe
-from erpnext.stock.doctype.item.test_item import create_item
 from erpnext.stock.doctype.serial_and_batch_bundle.test_serial_and_batch_bundle import (
 	get_serial_nos_from_bundle,
 	make_serial_batch_bundle,
@@ -15,6 +14,8 @@ from asset.asset.doctype.asset.asset import get_asset_account, get_asset_value_a
 from asset.asset.doctype.asset.test_asset import (
 	create_asset,
 	create_asset_data,
+	create_asset_item,
+	make_purchase_invoice,
 	set_depreciation_settings_in_company,
 )
 from asset.asset.doctype.asset_depreciation_schedule.asset_depreciation_schedule import (
@@ -27,7 +28,7 @@ class TestAssetRepair(unittest.TestCase):
 	def setUpClass(cls):
 		set_depreciation_settings_in_company()
 		create_asset_data()
-		create_item("_Test Stock Item")
+		create_asset_item("_Test Stock Item")
 		frappe.db.sql("delete from `tabTax Rule`")
 
 	def test_update_status(self):
@@ -273,7 +274,6 @@ def num_of_depreciations(asset):
 
 
 def create_asset_repair(**args):
-	from erpnext.accounts.doctype.purchase_invoice.test_purchase_invoice import make_purchase_invoice
 	from erpnext.stock.doctype.warehouse.test_warehouse import create_warehouse
 
 	args = frappe._dict(args)

@@ -130,6 +130,7 @@ override_doctype_class = {
 	"Purchase Invoice": "asset.asset.customizations.purchase_invoice.purchase_invoice.AssetPurchaseInvoice",
 	"Landed Cost Voucher": "asset.asset.customizations.landed_cost_voucher.landed_cost_voucher.AssetLandedCostVoucher",
 	"Serial and Batch Bundle": "asset.asset.customizations.serial_and_batch_bundle.serial_and_batch_bundle.AssetSerialandBatchBundle",
+	"Sales Invoice": "asset.asset.customizations.sales_invoice.sales_invoice.overrideSalesInvoice",
 }
 
 # Document Events
@@ -212,6 +213,7 @@ override_whitelisted_methods = {
 override_doctype_dashboards = {
 	"Purchase Receipt": "asset.asset.customizations.purchase_receipt.purchase_receipt_dashboard.get_dashboard_for_purchase_receipt",
 	"Purchase Invoice": "asset.asset.customizations.purchase_invoice.purchase_invoice_dashboard.get_dashboard_for_purchase_invoice",
+	"Finance Book": "asset.asset.customizations.finance_book.finance_book_dashboard.get_dashboard_for_finance_book",
 }
 
 # exempt linked doctypes from being automatically cancelled

@@ -37,3 +37,20 @@ class TestLocation(unittest.TestCase):
 
 		self.assertEqual(ordered_formatted_locations, ordered_test_location_features)
 		self.assertEqual(area, test_location.get("area"))
+
+		if not frappe.db.exists("Location", "Test Location"):
+			frappe.get_doc({"doctype": "Location", "location_name": "Test Location"}).insert()
+
+	def setup_dimensions(self):
+		# create dimension
+		from erpnext.accounts.doctype.accounting_dimension.test_accounting_dimension import (
+			create_dimension,
+		)
+
+		create_dimension()
+		# make it non-mandatory
+		loc = frappe.get_doc("Accounting Dimension", "Location")
+		for x in loc.dimension_defaults:
+			x.mandatory_for_bs = False
+			x.mandatory_for_pl = False
+		loc.save()

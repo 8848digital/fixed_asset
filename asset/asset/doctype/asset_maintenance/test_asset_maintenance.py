@@ -4,9 +4,9 @@
 import unittest
 
 import frappe
-from erpnext.stock.doctype.purchase_receipt.test_purchase_receipt import make_purchase_receipt
 from frappe.utils import add_days, get_last_day, nowdate
 
+from asset.asset.doctype.asset.test_asset import make_purchase_receipt
 from asset.asset.doctype.asset_maintenance.asset_maintenance import calculate_next_due_date
 
 
