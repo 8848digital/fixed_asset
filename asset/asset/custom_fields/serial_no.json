@@ -27,6 +27,15 @@
             "read_only": 1,
             "insert_after": "asset",
             "module": "asset"
+        },
+        {
+            "fieldname": "location",
+            "fieldtype": "Link",
+            "label": "Location",
+            "options": "Location",
+            "read_only": 1,
+            "insert_after": "column_break_24",
+            "module": "asset"
         }
     ]
 }
