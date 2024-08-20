@@ -1,18 +1,11 @@
-import erpnext
 import frappe
-from erpnext.accounts.utils import get_account_currency
-from erpnext.controllers.accounts_controller import merge_taxes
-from erpnext.stock.doctype.purchase_receipt.purchase_receipt import (
-	PurchaseReceipt,
-	get_invoiced_qty_map,
-	get_item_account_wise_additional_cost,
-	get_returned_qty_map,
-	get_stock_value_difference,
-)
-from frappe import _, throw
-from frappe.model.mapper import get_mapped_doc
-from frappe.utils import cint, flt
+from erpnext.stock.doctype.purchase_receipt.purchase_receipt import PurchaseReceipt
+from frappe import _
 
+from asset.asset.controllers.buying_controller.override.validate_asset import (
+	update_valuation_rate,
+	validate_stock_or_nonstock_items,
+)
 from asset.asset.customizations.purchase_receipt.doc_events.validate_cwip_accounts import (
 	validate_cwip_accounts,
 )
@@ -31,6 +24,12 @@ class AssetPurchaseReceipt(PurchaseReceipt):
 
 	def update_assets(self, item, valuation_rate):
 		asset_update_assets(self, item, valuation_rate)
+
+	def validate_stock_or_nonstock_items(self):
+		validate_stock_or_nonstock_items(self)
+
+	def update_valuation_rate(self, reset_outgoing_rate=True):
+		update_valuation_rate(self, reset_outgoing_rate)
 
 
 def validate(self, method=None):

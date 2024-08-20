@@ -16,7 +16,7 @@ def get_item_details(args, doc=None, for_validate=False, overwrite_warehouse=Tru
 	item = frappe.get_cached_doc("Item", args.item_code)
 	out = get_basic_details(args, item, overwrite_warehouse)
 
-	if item.is_fixed_asset:
+	if item.get("is_fixed_asset"):
 		expense_account = None
 		from asset.asset.doctype.asset.asset import get_asset_account, is_cwip_accounting_enabled
 
