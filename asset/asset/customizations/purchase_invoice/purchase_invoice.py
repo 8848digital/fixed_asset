@@ -1,6 +1,10 @@
 import frappe
 from erpnext.accounts.doctype.purchase_invoice.purchase_invoice import PurchaseInvoice
 
+from asset.asset.controllers.buying_controller.override.validate_asset import (
+	update_valuation_rate,
+	validate_stock_or_nonstock_items,
+)
 from asset.asset.customizations.purchase_invoice.override.make_item_gl_entries import (
 	asset_make_item_gl_entries,
 	asset_update_gross_purchase_amount_for_linked_assets,
@@ -32,6 +36,12 @@ class AssetPurchaseInvoice(PurchaseInvoice):
 				if is_cwip_accounting_enabled(asset_category):
 					return 1
 		return 0
+
+	def validate_stock_or_nonstock_items(self):
+		validate_stock_or_nonstock_items(self)
+
+	def update_valuation_rate(self, reset_outgoing_rate=True):
+		update_valuation_rate(self, reset_outgoing_rate)
 
 
 @frappe.whitelist()

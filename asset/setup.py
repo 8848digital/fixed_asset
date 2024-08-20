@@ -84,3 +84,23 @@ def run_post_install_patches():
 			frappe.get_attr(f"asset.patches.post_install.{patch_name}.execute")()
 	finally:
 		frappe.flags.in_patch = False
+
+
+from erpnext.controllers.accounts_controller import AccountsController
+from erpnext.controllers.stock_controller import StockController
+from erpnext.stock.serial_batch_bundle import SerialBatchBundle
+
+from asset.asset.controllers.accounts_controller.accounts_controller import AssetAccountsController
+from asset.asset.controllers.stock_controller.stock_controller import AssetStockController
+from asset.asset.customizations.serial_and_batch_bundle.serial_batch_bundle import (
+	AssetSerialBatchBundle,
+)
+
+
+def apply_patches():
+	StockController.make_gl_entries = AssetStockController.make_gl_entries
+	StockController.make_bundle_using_old_serial_batch_fields = (
+		AssetStockController.make_bundle_using_old_serial_batch_fields
+	)
+	SerialBatchBundle.child_doctype = AssetSerialBatchBundle.child_doctype
+	AccountsController.set_missing_item_details = AssetAccountsController.set_missing_item_details
